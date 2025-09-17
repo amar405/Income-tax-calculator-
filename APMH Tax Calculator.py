@@ -2,18 +2,21 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+from io import BytesIO
+from datetime import datetime
 
 # TAX CALCULATION FUNCTIONS (Final Corrected Version with Marginal Relief)
-
 def calculate_total_income(regime, salary, business_income, house_income, other_sources, house_loan_interest=0):
     # Salary – Apply standard deduction
     if regime == 'new':
         salary -= 75000
     else:
         salary -= 50000
+
     # House Property – Apply 30% standard deduction THEN subtract loan interest
     house_income *= 0.70
     house_income -= house_loan_interest  # Deduct interest on house property loan
+
     # Total income excluding capital gains
     total = max(0, salary) + max(0, business_income) + max(0, house_income) + max(0, other_sources)
     return total
@@ -27,11 +30,13 @@ def calculate_surcharge_rate(total_income, regime, capital_gains_income):
         rate = 0.25
     elif total_income > 10000000:  # 1–2 cr
         rate = 0.15
-    elif total_income > 5000000:   # 50L–1cr
+    elif total_income > 5000000:  # 50L–1cr
         rate = 0.10
+
     # Capital gains surcharge cap at 15%
     if capital_gains_income > 0 and rate > 0.15:
         rate = 0.15
+
     return rate
 
 def calculate_tax_old_regime(total_income, stcg, ltcg):
@@ -45,12 +50,12 @@ def calculate_tax_old_regime(total_income, stcg, ltcg):
         tax = 12500 + (total_income - 500000) * 0.2
     else:
         tax = 112500 + (total_income - 1000000) * 0.3
-    
+
     # Capital gains tax (separate calculation)
     cg_tax = stcg * 0.20
     if ltcg > 125000:
         cg_tax += (ltcg - 125000) * 0.125
-    
+
     # Apply rebate ONLY to regular income tax (NOT capital gains)
     rebate_applied = 0
     if total_income <= 500000:  # ₹5L limit
@@ -58,17 +63,17 @@ def calculate_tax_old_regime(total_income, stcg, ltcg):
         tax_after_rebate = max(0, tax - rebate_applied)
     else:
         tax_after_rebate = tax
-    
+
     # Total tax = Regular tax (after rebate) + Capital gains tax (no rebate)
     total_tax_before_surcharge = tax_after_rebate + cg_tax
-    
+
     # Surcharge
     surcharge_rate = calculate_surcharge_rate(total_income + stcg + ltcg, "old", stcg + ltcg)
     surcharge = total_tax_before_surcharge * surcharge_rate
-    
+
     # Cess
     cess = (total_tax_before_surcharge + surcharge) * 0.04
-    
+
     return round(max(total_tax_before_surcharge, 0), 2), round(surcharge, 2), round(cess, 2), round(rebate_applied, 2), 0
 
 def calculate_tax_new_regime(total_income, stcg, ltcg):
@@ -80,52 +85,47 @@ def calculate_tax_new_regime(total_income, stcg, ltcg):
         (400000, 0.15),    # 12L to 16L: 15%
         (400000, 0.20),    # 16L to 20L: 20%
         (400000, 0.25),    # 20L to 24L: 25%
-        (float('inf'), 0.30)  # Above 24L: 30%
+        (float('inf'), 0.30) # Above 24L: 30%
     ]
-    
+
     # Step 1: Apply LTCG exemption of ₹1.25L first
     exempt_ltcg = min(ltcg, 125000)
     taxable_ltcg_after_exemption = max(0, ltcg - exempt_ltcg)
-    
+
     # Step 2: Calculate available basic exemption (₹4,00,000 for new regime)
     basic_exemption_limit = 400000
-    
+
     # Step 3: Apply basic exemption in priority order
     # Priority: 1. Other income, 2. STCG, 3. Taxable LTCG
     remaining_exemption = basic_exemption_limit
-    
+
     # Use exemption for other income first
     other_income_exempted = min(total_income, remaining_exemption)
     remaining_exemption = max(0, remaining_exemption - other_income_exempted)
     taxable_other_income = max(0, total_income - other_income_exempted)
-    
+
     # Use remaining exemption for STCG
     stcg_exempted = min(stcg, remaining_exemption)
     remaining_exemption = max(0, remaining_exemption - stcg_exempted)
     taxable_stcg = max(0, stcg - stcg_exempted)
-    
+
     # Use remaining exemption for taxable LTCG
     ltcg_exempted = min(taxable_ltcg_after_exemption, remaining_exemption)
     final_taxable_ltcg = max(0, taxable_ltcg_after_exemption - ltcg_exempted)
-    
+
     # Step 4: Calculate tax on REGULAR income starting from appropriate slab
     regular_tax = 0
-    
     if taxable_other_income > 0:
         exemption_used_from_regular = other_income_exempted
-        
         if exemption_used_from_regular >= 400000:
             # Full ₹4L exemption used from regular income
             # Start from ₹4L-8L slab (index 1)
             income_remaining = taxable_other_income
-            
             # Apply slabs starting from 4L-8L (5%)
             for i in range(1, len(slabs)):  # Start from index 1 (₹4L-8L slab)
                 slab_limit, rate = slabs[i]
-                
                 if income_remaining <= 0:
                     break
-                
                 taxable_in_slab = min(income_remaining, slab_limit)
                 regular_tax += taxable_in_slab * rate
                 income_remaining -= taxable_in_slab
@@ -133,25 +133,24 @@ def calculate_tax_new_regime(total_income, stcg, ltcg):
             # Partial exemption used from regular income
             remaining_in_first_slab = 400000 - exemption_used_from_regular
             income_remaining = taxable_other_income
-            
+
             # If there's still room in the 0% slab
             if remaining_in_first_slab > 0:
                 tax_free_amount = min(income_remaining, remaining_in_first_slab)
                 income_remaining -= tax_free_amount
-            
+
             # Apply remaining slabs
             for i in range(1, len(slabs)):
                 if income_remaining <= 0:
                     break
-                
                 slab_limit, rate = slabs[i]
                 taxable_in_slab = min(income_remaining, slab_limit)
                 regular_tax += taxable_in_slab * rate
                 income_remaining -= taxable_in_slab
-    
+
     # Step 5: Calculate capital gains tax separately
     cg_tax = taxable_stcg * 0.20 + final_taxable_ltcg * 0.125
-    
+
     # Step 6: Apply rebate ONLY to regular income tax (NOT capital gains)
     rebate_applied = 0
     if total_income <= 1200000:  # ₹12L limit
@@ -159,36 +158,390 @@ def calculate_tax_new_regime(total_income, stcg, ltcg):
         regular_tax_after_rebate = max(0, regular_tax - rebate_applied)
     else:
         regular_tax_after_rebate = regular_tax
-    
+
     # Step 7: Total tax = Regular tax (after rebate) + Capital gains tax (no rebate)
     total_tax_before_surcharge = regular_tax_after_rebate + cg_tax
-    
+
     # Step 8: Apply Marginal Relief for income between ₹12L to ₹12.6L
     marginal_relief_applied = 0
     total_taxable_income = total_income + stcg + ltcg
-    
+
     if 1200000 < total_taxable_income <= 1260000:
         # Calculate tax without rebate for marginal relief comparison
         tax_without_rebate = regular_tax + cg_tax
-        
+
         # Marginal relief calculation
         marginal_relief_amount = total_taxable_income - 1200000
-        
+
         # Apply marginal relief - tax cannot exceed the excess over ₹12L
         if total_tax_before_surcharge > marginal_relief_amount:
             marginal_relief_applied = total_tax_before_surcharge - marginal_relief_amount
             total_tax_before_surcharge = marginal_relief_amount
-    
+
     # Step 9: Calculate surcharge
     surcharge_rate = calculate_surcharge_rate(total_income + stcg + ltcg, "new", stcg + ltcg)
     surcharge = total_tax_before_surcharge * surcharge_rate
-    
+
     # Step 10: Calculate cess
     cess = (total_tax_before_surcharge + surcharge) * 0.04
-    
+
     return round(max(total_tax_before_surcharge, 0), 2), round(surcharge, 2), round(cess, 2), round(rebate_applied, 2), round(marginal_relief_applied, 2)
 
-# STREAMLIT UI START - ENHANCED VERSION
+# PROFESSIONAL EXCEL EXPORT WITH FIXED SYNTAX
+def create_professional_excel_report(salary, business_income, house_income, other_sources, stcg, ltcg, regime, house_loan_interest=0):
+    """Create Excel report with professional colors and improved visibility using xlsxwriter"""
+
+    # Calculate processed incomes
+    processed_salary = salary - (75000 if regime == 'new' else 50000)
+    processed_house = (house_income * 0.70) - house_loan_interest
+    total_income_calc = max(0, processed_salary) + max(0, business_income) + max(0, processed_house) + max(0, other_sources)
+
+    # Calculate tax
+    if regime == 'new':
+        tax, surcharge, cess, rebate, marginal_relief = calculate_tax_new_regime(total_income_calc, stcg, max(0, ltcg))
+    else:
+        tax, surcharge, cess, rebate, marginal_relief = calculate_tax_old_regime(total_income_calc, stcg, max(0, ltcg))
+
+    # Create Excel file in memory
+    output = BytesIO()
+
+    try:
+        import xlsxwriter
+
+        # Create workbook with xlsxwriter for guaranteed formatting
+        workbook = xlsxwriter.Workbook(output, {'in_memory': True})
+        worksheet = workbook.add_worksheet('Income Tax Computation')
+
+        # Define IMPROVED professional formats with better visibility
+        title_format = workbook.add_format({
+            'bold': True,
+            'font_size': 18,
+            'align': 'center',
+            'valign': 'vcenter',
+            'bg_color': '#003366',
+            'font_color': '#FFFFFF',
+            'border': 2,
+            'border_color': '#000000'
+        })
+
+        header_format = workbook.add_format({
+            'bold': True,
+            'font_size': 13,
+            'align': 'center',
+            'valign': 'vcenter',
+            'bg_color': '#0066CC',
+            'font_color': '#FFFFFF',
+            'border': 1,
+            'border_color': '#000000'
+        })
+
+        section_format = workbook.add_format({
+            'bold': True,
+            'font_size': 14,
+            'align': 'center',
+            'valign': 'vcenter',
+            'bg_color': '#8B0000',
+            'font_color': '#FFFFFF',
+            'border': 1,
+            'border_color': '#000000'
+        })
+
+        # FIXED bullet format with WHITE text on ORANGE background for maximum visibility
+        bullet_format = workbook.add_format({
+            'bold': True,
+            'font_size': 12,
+            'align': 'left',
+            'valign': 'vcenter',
+            'bg_color': '#FF8C00',
+            'font_color': '#FFFFFF',
+            'border': 1,
+            'border_color': '#000000'
+        })
+
+        data_format = workbook.add_format({
+            'font_size': 10,
+            'align': 'left',
+            'valign': 'vcenter',
+            'border': 1,
+            'border_color': '#000000'
+        })
+
+        amount_format = workbook.add_format({
+            'font_size': 10,
+            'bold': True,
+            'align': 'right',
+            'valign': 'vcenter',
+            'num_format': '₹#,##0.00',
+            'border': 1,
+            'border_color': '#000000'
+        })
+
+        total_format = workbook.add_format({
+            'font_size': 11,
+            'bold': True,
+            'align': 'right',
+            'valign': 'vcenter',
+            'num_format': '₹#,##0.00',
+            'bg_color': '#E8F4FD',
+            'border': 1,
+            'border_color': '#000000'
+        })
+
+        # Set column widths
+        worksheet.set_column('A:A', 50)
+        worksheet.set_column('B:B', 20)
+        worksheet.set_column('C:C', 18)
+        worksheet.set_column('D:D', 20)
+
+        row = 0
+
+        # Column headers
+        worksheet.write(row, 0, 'Particulars', header_format)
+        worksheet.write(row, 1, 'Details', header_format)
+        worksheet.write(row, 2, 'Sub-total', header_format)
+        worksheet.write(row, 3, 'Total', header_format)
+        row += 1
+
+        # Main title
+        worksheet.merge_range(f'A{row+1}:D{row+1}', 'INCOME TAX COMPUTATION - A.Y. 2026-27', title_format)
+        row += 2
+
+        # Statement of Income header
+        worksheet.merge_range(f'A{row+1}:D{row+1}', 'STATEMENT OF INCOME', section_format)
+        row += 2
+
+        # Income sources with improved visibility
+        if salary > 0:
+            worksheet.merge_range(f'A{row+1}:D{row+1}', '● INCOME FROM SALARY', bullet_format)
+            row += 1
+
+            worksheet.write(row, 0, 'Salary Income', data_format)
+            worksheet.write(row, 1, salary, amount_format)
+            row += 1
+
+            worksheet.write(row, 0, f'Less: Standard deduction u/s 16(ia)', data_format)
+            worksheet.write(row, 1, 75000 if regime == 'new' else 50000, amount_format)
+            row += 1
+
+            worksheet.write(row, 0, 'Net Income from Salary', data_format)
+            worksheet.write(row, 2, max(0, processed_salary), total_format)
+            row += 2
+
+        if house_income != 0:
+            worksheet.merge_range(f'A{row+1}:D{row+1}', '● INCOME FROM HOUSE PROPERTY', bullet_format)
+            row += 1
+
+            worksheet.write(row, 0, 'Property Type', data_format)
+            worksheet.write(row, 1, 'Let-out property' if house_income > 0 else 'Self-occupied', data_format)
+            row += 1
+
+            worksheet.write(row, 0, 'Gross annual value' if house_income > 0 else 'Deemed Rental', data_format)
+            worksheet.write(row, 1, abs(house_income) if house_income != 0 else 0, amount_format)
+            row += 1
+
+            worksheet.write(row, 0, 'Less: Municipal taxes', data_format)
+            worksheet.write(row, 1, 0, amount_format)
+            row += 1
+
+            worksheet.write(row, 0, 'Less: Standard deduction u/s 24(a)', data_format)
+            worksheet.write(row, 1, abs(house_income) * 0.30 if house_income != 0 else 0, amount_format)
+            row += 1
+
+            if house_loan_interest > 0:
+                worksheet.write(row, 0, 'Less: Interest on housing loan u/s 24(b)', data_format)
+                worksheet.write(row, 1, house_loan_interest, amount_format)
+                row += 1
+
+            worksheet.write(row, 0, 'Net Income from House Property', data_format)
+            worksheet.write(row, 2, processed_house, total_format)
+            row += 2
+
+        if business_income > 0:
+            worksheet.merge_range(f'A{row+1}:D{row+1}', '● PROFITS AND GAINS OF BUSINESS OR PROFESSION', bullet_format)
+            row += 1
+
+            worksheet.write(row, 0, 'Business/Professional Income', data_format)
+            worksheet.write(row, 1, business_income, amount_format)
+            row += 1
+
+            worksheet.write(row, 0, 'Net Income from Business/Profession', data_format)
+            worksheet.write(row, 2, business_income, total_format)
+            row += 2
+
+        if stcg > 0 or ltcg > 0:
+            worksheet.merge_range(f'A{row+1}:D{row+1}', '● CAPITAL GAINS', bullet_format)
+            row += 1
+
+            if stcg > 0:
+                worksheet.write(row, 0, 'Short Term Capital Gains', data_format)
+                worksheet.write(row, 1, stcg, amount_format)
+                row += 1
+
+            if ltcg > 0:
+                worksheet.write(row, 0, 'Long Term Capital Gains', data_format)
+                worksheet.write(row, 1, ltcg, amount_format)
+                row += 1
+
+                if ltcg > 125000:
+                    worksheet.write(row, 0, 'Less: Exemption u/s 112A', data_format)
+                    worksheet.write(row, 1, 125000, amount_format)
+                    row += 1
+
+            net_cg = stcg + max(0, ltcg - 125000)
+            worksheet.write(row, 0, 'Net Capital Gains', data_format)
+            worksheet.write(row, 2, net_cg, total_format)
+            row += 2
+
+        if other_sources > 0:
+            worksheet.merge_range(f'A{row+1}:D{row+1}', '● INCOME FROM OTHER SOURCES', bullet_format)
+            row += 1
+
+            worksheet.write(row, 0, 'Interest Income', data_format)
+            worksheet.write(row, 1, other_sources, amount_format)
+            row += 1
+
+            worksheet.write(row, 0, 'Net Income from Other Sources', data_format)
+            worksheet.write(row, 2, other_sources, total_format)
+            row += 2
+
+        # Total Income - FIXED the syntax error here
+        gross_total = total_income_calc + stcg + max(0, ltcg)
+        worksheet.write(row, 0, 'Income chargeable under the head House Property', data_format)
+        worksheet.write(row, 3, gross_total, total_format)
+        row += 2
+
+        # Tax Computation
+        worksheet.merge_range(f'A{row+1}:D{row+1}', 'TAX COMPUTATION', section_format)
+        row += 2
+
+        worksheet.write(row, 0, f'Tax as per {regime.upper()} regime', data_format)
+        worksheet.write(row, 3, tax, total_format)
+        row += 1
+
+        if surcharge > 0:
+            worksheet.write(row, 0, 'Add: Surcharge', data_format)
+            worksheet.write(row, 3, surcharge, amount_format)
+            row += 1
+
+        if cess > 0:
+            worksheet.write(row, 0, 'Add: Health & Education Cess', data_format)
+            worksheet.write(row, 3, cess, amount_format)
+            row += 1
+
+        if rebate > 0:
+            worksheet.write(row, 0, 'Less: Rebate u/s 87A', data_format)
+            worksheet.write(row, 3, rebate, amount_format)
+            row += 1
+
+        if marginal_relief > 0:
+            worksheet.write(row, 0, 'Less: Marginal Relief', data_format)
+            worksheet.write(row, 3, marginal_relief, amount_format)
+            row += 1
+
+        total_tax = tax + surcharge + cess
+        worksheet.write(row, 0, 'TOTAL TAX LIABILITY', data_format)
+        worksheet.write(row, 3, total_tax, total_format)
+
+        workbook.close()
+        output.seek(0)
+        return output
+
+    except ImportError:
+        # Fallback using pandas if xlsxwriter not available
+        import pandas as pd
+
+        # Create basic data structure with FIXED syntax
+        report_data = [
+            ["Particulars", "Details", "Sub-total", "Total"],
+            ["INCOME TAX COMPUTATION - A.Y. 2026-27", "", "", ""],
+            ["", "", "", ""],
+            ["STATEMENT OF INCOME", "", "", ""],
+            ["", "", "", ""]
+        ]
+
+        # Add income details (with FIXED syntax)
+        if salary > 0:
+            report_data.extend([
+                ["● INCOME FROM SALARY", "", "", ""],
+                ["Salary Income", f"₹{salary:,.2f}", "", ""],
+                [f"Less: Standard deduction u/s 16(ia)", f"₹{75000 if regime == 'new' else 50000:,.2f}", "", ""],
+                ["Net Income from Salary", "", f"₹{max(0, processed_salary):,.2f}", ""],
+                ["", "", "", ""]
+            ])
+
+        if house_income != 0:
+            report_data.extend([
+                ["● INCOME FROM HOUSE PROPERTY", "", "", ""],
+                ["Property Type", "Let-out property" if house_income > 0 else "Self-occupied", "", ""],
+                ["Gross annual value" if house_income > 0 else "Deemed Rental", f"₹{abs(house_income):,.2f}" if house_income != 0 else "₹0", "", ""],
+                ["Less: Municipal taxes", "₹0", "", ""],
+                ["Less: Standard deduction u/s 24(a)", f"₹{abs(house_income) * 0.30 if house_income != 0 else 0:,.2f}", "", ""]
+            ])
+            if house_loan_interest > 0:
+                report_data.append(["Less: Interest on housing loan u/s 24(b)", f"₹{house_loan_interest:,.2f}", "", ""])
+            report_data.extend([
+                ["Net Income from House Property", "", f"₹{processed_house:,.2f}", ""],
+                ["", "", "", ""]
+            ])
+
+        if business_income > 0:
+            report_data.extend([
+                ["● PROFITS AND GAINS OF BUSINESS OR PROFESSION", "", "", ""],
+                ["Business/Professional Income", f"₹{business_income:,.2f}", "", ""],
+                ["Net Income from Business/Profession", "", f"₹{business_income:,.2f}", ""],
+                ["", "", "", ""]
+            ])
+
+        if stcg > 0 or ltcg > 0:
+            report_data.extend([
+                ["● CAPITAL GAINS", "", "", ""]
+            ])
+            if stcg > 0:
+                report_data.append(["Short Term Capital Gains", f"₹{stcg:,.2f}", "", ""])
+            if ltcg > 0:
+                report_data.append(["Long Term Capital Gains", f"₹{ltcg:,.2f}", "", ""])
+                if ltcg > 125000:
+                    report_data.append(["Less: Exemption u/s 112A", f"₹{125000:,.2f}", "", ""])
+            net_cg = stcg + max(0, ltcg - 125000)
+            report_data.extend([
+                ["Net Capital Gains", "", f"₹{net_cg:,.2f}", ""],
+                ["", "", "", ""]
+            ])
+
+        if other_sources > 0:
+            report_data.extend([
+                ["● INCOME FROM OTHER SOURCES", "", "", ""],
+                ["Interest Income", f"₹{other_sources:,.2f}", "", ""],
+                ["Net Income from Other Sources", "", f"₹{other_sources:,.2f}", ""],
+                ["", "", "", ""]
+            ])
+
+        # Total Income - FIXED the syntax error here too
+        gross_total = total_income_calc + stcg + max(0, ltcg)
+        report_data.extend([
+            ["Income chargeable under the head House Property", "", "", f"₹{gross_total:,.2f}"],
+            ["", "", "", ""],
+            ["TAX COMPUTATION", "", "", ""],
+            [f"Tax as per {regime.upper()} regime", "", "", f"₹{tax:,.2f}"]
+        ])
+
+        if surcharge > 0:
+            report_data.append(["Add: Surcharge", "", "", f"₹{surcharge:,.2f}"])
+        if cess > 0:
+            report_data.append(["Add: Health & Education Cess", "", "", f"₹{cess:,.2f}"])
+        if rebate > 0:
+            report_data.append(["Less: Rebate u/s 87A", "", "", f"₹{rebate:,.2f}"])
+        if marginal_relief > 0:
+            report_data.append(["Less: Marginal Relief", "", "", f"₹{marginal_relief:,.2f}"])
+
+        total_tax = tax + surcharge + cess
+        report_data.append(["TOTAL TAX LIABILITY", "", "", f"₹{total_tax:,.2f}"])
+
+        df = pd.DataFrame(report_data)
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, sheet_name='Income Tax Computation', index=False, header=False)
+
+        return output
 
 st.set_page_config(
     page_title="APMH Tax Calculator", 
@@ -708,6 +1061,42 @@ with tab3:
     st.dataframe(tax_dates, use_container_width=True)
 
 # Footer
+
+# Excel Export Section with FIXED SYNTAX
+st.markdown("---")
+st.markdown("### 📄 Export Tax Computation to Excel")
+st.info("🎨 Generate professional Excel report with clear visibility and FIXED syntax")
+
+if st.button("📊 Generate & Download Excel Report", type="primary"):
+    try:
+        # Create professional Excel with fixed syntax
+        excel_output = create_professional_excel_report(
+            salary, business_income, house_income, other_sources, 
+            stcg, ltcg, regime, house_loan_interest
+        )
+
+        st.success("✅ Professional Excel report generated successfully! 🎨")
+
+        # Download button
+        st.download_button(
+            label="📥 Download Excel Report",
+            data=excel_output.getvalue(),
+            file_name=f"Income_Tax_Computation_AY_2026-27_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            help="Download Excel file with professional formatting and clear visibility"
+        )
+
+        st.info("✅ FIXED FEATURES:")
+        st.write("• 🔧 **Syntax Error Fixed**: No more quote conflicts")
+        st.write("• 🎨 **Clear Headers**: WHITE text on ORANGE background")
+        st.write("• 📏 **Professional Formatting**: Borders, colors, and alignment") 
+        st.write("• 🔢 **Currency Formatting**: Proper ₹ symbol display")
+        st.write("• 📊 **A.Y. 2026-27**: Correct assessment year")
+
+    except Exception as e:
+        st.error(f"❌ Error generating Excel: {e}")
+        st.info("💡 Install xlsxwriter for best results: pip install xlsxwriter")
+
 st.markdown("---")
 st.markdown("""
 <div style='text-align: center; color: #666; padding: 20px;'>
