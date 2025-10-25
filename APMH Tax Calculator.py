@@ -553,159 +553,151 @@ st.set_page_config(
 # Advanced CSS styling with light blue theme
 st.markdown("""
     <style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+    body, .stApp {
+        font-family: 'Poppins', sans-serif;
+        background: linear-gradient(135deg, #825CFF 0%, #A88BFF 100%);
+        min-height: 100vh;
+        color: #333;
+    }
+
+    /* Main Page Layout */
     .main {
-        padding: 0rem 1rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 2rem 1rem;
     }
 
-    /* App background — smooth gradient works in both modes */
-    .stApp {
-        background: linear-gradient(135deg, #E8F0FE 0%, #F9FBFF 50%, #E3F2FD 100%);
-        color: #1A237E;
-    }
-    @media (prefers-color-scheme: dark) {
-        .stApp {
-            background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
-            color: #E3F2FD;
-        }
-    }
-
-    /* Header */
+    /* Header Section */
     .main-header {
-        background: linear-gradient(90deg, #3F51B5, #5C6BC0);
-        padding: 2rem;
-        border-radius: 12px;
-        margin-bottom: 2rem;
+        background: white;
+        padding: 25px;
+        border-radius: 15px;
         text-align: center;
-        color: #FFFFFF;
-        box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-    }
-    @media (prefers-color-scheme: dark) {
-        .main-header {
-            background: linear-gradient(90deg, #283593, #3949AB);
-            color: #E3F2FD;
-        }
-    }
-
-    /* Input Container */
-    .input-container {
-        background: #FFFFFF;
-        padding: 2rem;
-        border-radius: 15px;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
         margin-bottom: 2rem;
-    }
-    @media (prefers-color-scheme: dark) {
-        .input-container {
-            background: #1E293B;
-            color: #E3F2FD;
-        }
+        animation: fadeInUp 0.5s ease-in-out;
+        color: #333;
     }
 
-    /* Result Container */
-    .result-container {
-        background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
-        padding: 2rem;
-        border-radius: 15px;
-        box-shadow: 0 8px 16px rgba(0,0,0,0.1);
-        color: #0D47A1;
+    .main-header h1 {
+        font-size: 26px;
+        color: #4B0082;
+        margin-bottom: 5px;
     }
-    @media (prefers-color-scheme: dark) {
-        .result-container {
-            background: linear-gradient(135deg, #1E3A8A 0%, #1E40AF 100%);
-            color: #E3F2FD;
-        }
+
+    .main-header p {
+        font-size: 16px;
+        color: #666;
+    }
+
+    /* Input and Result Containers */
+    .input-container, .result-container {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        margin-bottom: 30px;
+        animation: fadeInUp 0.6s ease-in-out;
+    }
+
+    /* Buttons */
+    .stButton > button {
+        background-color: #825CFF;
+        color: white;
+        border: none;
+        border-radius: 30px;
+        padding: 12px 30px;
+        font-size: 16px;
+        font-family: 'Poppins', sans-serif;
+        cursor: pointer;
+        box-shadow: 0 8px 20px rgba(130, 92, 255, 0.4);
+        transition: all 0.3s ease;
+        font-weight: 600;
+    }
+
+    .stButton > button:hover {
+        background-color: #6334fd;
+        transform: translateY(-2px);
     }
 
     /* Metric Cards */
     .metric-card {
         background: #FFFFFF;
-        padding: 1.5rem;
-        border-radius: 10px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-        margin: 0.5rem;
+        border-radius: 12px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
         text-align: center;
-        color: #1A237E;
-    }
-    @media (prefers-color-scheme: dark) {
-        .metric-card {
-            background: #1E293B;
-            color: #E3F2FD;
-        }
-    }
-
-    /* Buttons */
-    .stButton > button {
-        background: linear-gradient(90deg, #3F51B5, #5C6BC0);
-        color: #FFFFFF;
-        border: none;
-        padding: 0.75rem 2rem;
-        border-radius: 25px;
-        font-weight: bold;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-        transition: all 0.3s ease;
-    }
-    .stButton > button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 14px rgba(0,0,0,0.25);
+        padding: 20px;
+        color: #333;
     }
 
     /* Sidebar */
     .sidebar .sidebar-content {
-        background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
-        color: #0D47A1;
-    }
-    @media (prefers-color-scheme: dark) {
-        .sidebar .sidebar-content {
-            background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
-            color: #E3F2FD;
-        }
+        background: #F8F6FF;
+        color: #333;
+        border-right: 2px solid rgba(130, 92, 255, 0.2);
     }
 
     /* Tabs */
     .stTabs [data-baseweb="tab-list"] {
-        background-color: #E3F2FD;
+        background-color: #F3EEFF;
         border-radius: 10px;
+        margin-bottom: 1rem;
     }
+
     .stTabs [data-baseweb="tab"] {
-        color: #1A237E;
+        color: #4B0082;
+        font-weight: 500;
     }
+
     .stTabs [aria-selected="true"] {
-        background-color: #3F51B5 !important;
-        color: #FFFFFF !important;
+        background-color: #825CFF !important;
+        color: white !important;
         border-radius: 10px;
     }
-    @media (prefers-color-scheme: dark) {
-        .stTabs [data-baseweb="tab-list"] {
-            background-color: #1E293B;
-        }
-        .stTabs [data-baseweb="tab"] {
-            color: #E3F2FD;
-        }
-        .stTabs [aria-selected="true"] {
-            background-color: #3949AB !important;
-        }
-    }
 
-    /* Info / Success / Warning */
+    /* Info/Alert Boxes */
     .stAlert {
-        border-left: 4px solid #3F51B5;
-        background-color: rgba(63,81,181,0.05);
-        color: #1A237E;
+        background-color: #F3EEFF;
+        border-left: 5px solid #825CFF;
+        color: #333;
+        border-radius: 10px;
     }
-    @media (prefers-color-scheme: dark) {
-        .stAlert {
-            background-color: rgba(63,81,181,0.2);
-            border-left: 4px solid #5C6BC0;
-            color: #E3F2FD;
+
+    /* Fade In Animation */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
         }
     }
 
-    /* Footer */
-    footer, .reportview-container .markdown-text-container {
-        color: #5C6BC0;
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+        .main-header, .input-container, .result-container {
+            padding: 20px;
+        }
+
+        .stButton > button {
+            width: 100%;
+            padding: 12px;
+        }
     }
     </style>
 """, unsafe_allow_html=True)
+
 
 
 # Header
@@ -1203,5 +1195,6 @@ st.markdown("""
     <p><small>🆕 Now includes Marginal Relief for New Regime (₹12L-₹12.6L income range)</small></p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
