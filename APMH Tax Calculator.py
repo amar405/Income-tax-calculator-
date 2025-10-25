@@ -557,108 +557,156 @@ st.markdown("""
         padding: 0rem 1rem;
     }
 
-    /* App Background */
+    /* App background — smooth gradient works in both modes */
     .stApp {
-        background: linear-gradient(135deg, #0A0F1F 0%, #101B3A 100%);
-        color: #E8EAF6;
+        background: linear-gradient(135deg, #E8F0FE 0%, #F9FBFF 50%, #E3F2FD 100%);
+        color: #1A237E;
+    }
+    @media (prefers-color-scheme: dark) {
+        .stApp {
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+            color: #E3F2FD;
+        }
     }
 
     /* Header */
     .main-header {
-        background: linear-gradient(90deg, #1A237E, #283593);
+        background: linear-gradient(90deg, #3F51B5, #5C6BC0);
         padding: 2rem;
-        border-radius: 10px;
+        border-radius: 12px;
         margin-bottom: 2rem;
         text-align: center;
-        color: #E3F2FD;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+        color: #FFFFFF;
+        box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    }
+    @media (prefers-color-scheme: dark) {
+        .main-header {
+            background: linear-gradient(90deg, #283593, #3949AB);
+            color: #E3F2FD;
+        }
     }
 
-    /* Input container */
+    /* Input Container */
     .input-container {
-        background: #18244A;
+        background: #FFFFFF;
         padding: 2rem;
         border-radius: 15px;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.08);
         margin-bottom: 2rem;
-        color: #E8EAF6;
+    }
+    @media (prefers-color-scheme: dark) {
+        .input-container {
+            background: #1E293B;
+            color: #E3F2FD;
+        }
     }
 
-    /* Result container */
+    /* Result Container */
     .result-container {
-        background: linear-gradient(135deg, #1E2A55 0%, #263A7A 100%);
+        background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
         padding: 2rem;
         border-radius: 15px;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.4);
-        color: #E3F2FD;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        color: #0D47A1;
+    }
+    @media (prefers-color-scheme: dark) {
+        .result-container {
+            background: linear-gradient(135deg, #1E3A8A 0%, #1E40AF 100%);
+            color: #E3F2FD;
+        }
     }
 
-    /* Metric cards */
+    /* Metric Cards */
     .metric-card {
-        background: #121E3A;
+        background: #FFFFFF;
         padding: 1.5rem;
         border-radius: 10px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.08);
         margin: 0.5rem;
         text-align: center;
-        color: #E8EAF6;
+        color: #1A237E;
+    }
+    @media (prefers-color-scheme: dark) {
+        .metric-card {
+            background: #1E293B;
+            color: #E3F2FD;
+        }
     }
 
     /* Buttons */
     .stButton > button {
-        background: linear-gradient(90deg, #1565C0, #1E88E5);
+        background: linear-gradient(90deg, #3F51B5, #5C6BC0);
         color: #FFFFFF;
         border: none;
         padding: 0.75rem 2rem;
         border-radius: 25px;
         font-weight: bold;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15);
         transition: all 0.3s ease;
     }
     .stButton > button:hover {
         transform: translateY(-2px);
-        box-shadow: 0 6px 14px rgba(0,0,0,0.6);
+        box-shadow: 0 6px 14px rgba(0,0,0,0.25);
     }
 
     /* Sidebar */
     .sidebar .sidebar-content {
-        background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
-        color: #E8EAF6;
+        background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
+        color: #0D47A1;
     }
-
-    /* DataFrames and tables */
-    .stDataFrame {
-        background-color: #1C2541 !important;
-        color: #E3F2FD !important;
+    @media (prefers-color-scheme: dark) {
+        .sidebar .sidebar-content {
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+            color: #E3F2FD;
+        }
     }
 
     /* Tabs */
     .stTabs [data-baseweb="tab-list"] {
-        background-color: #0D1B2A;
+        background-color: #E3F2FD;
         border-radius: 10px;
     }
     .stTabs [data-baseweb="tab"] {
-        color: #E3F2FD;
+        color: #1A237E;
     }
     .stTabs [aria-selected="true"] {
-        background-color: #1E3A8A !important;
+        background-color: #3F51B5 !important;
         color: #FFFFFF !important;
         border-radius: 10px;
     }
-
-    /* Info / Success / Warning box adjustments */
-    .stAlert {
-        background-color: rgba(25, 118, 210, 0.2);
-        border-left: 4px solid #42A5F5;
-        color: #E3F2FD;
+    @media (prefers-color-scheme: dark) {
+        .stTabs [data-baseweb="tab-list"] {
+            background-color: #1E293B;
+        }
+        .stTabs [data-baseweb="tab"] {
+            color: #E3F2FD;
+        }
+        .stTabs [aria-selected="true"] {
+            background-color: #3949AB !important;
+        }
     }
 
-    /* Footer text */
+    /* Info / Success / Warning */
+    .stAlert {
+        border-left: 4px solid #3F51B5;
+        background-color: rgba(63,81,181,0.05);
+        color: #1A237E;
+    }
+    @media (prefers-color-scheme: dark) {
+        .stAlert {
+            background-color: rgba(63,81,181,0.2);
+            border-left: 4px solid #5C6BC0;
+            color: #E3F2FD;
+        }
+    }
+
+    /* Footer */
     footer, .reportview-container .markdown-text-container {
-        color: #90CAF9;
+        color: #5C6BC0;
     }
     </style>
 """, unsafe_allow_html=True)
+
 
 # Header
 st.markdown("""
@@ -1155,4 +1203,5 @@ st.markdown("""
     <p><small>🆕 Now includes Marginal Relief for New Regime (₹12L-₹12.6L income range)</small></p>
 </div>
 """, unsafe_allow_html=True)
+
 
