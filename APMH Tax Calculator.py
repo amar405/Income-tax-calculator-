@@ -754,16 +754,16 @@ tab1, tab2, tab3 = st.tabs(["🧮 Calculate Tax", "📊 Analysis", "📋 Tax Pla
 with tab1:
     # Input form with enhanced styling
     st.markdown('<div class="input-container">', unsafe_allow_html=True)
-    
+
     with st.form("tax_form"):
         st.markdown("### 🔧 Tax Regime Selection")
         regime = st.radio(
-            "Select Tax Regime", 
-            ["old", "new"], 
+            "Select Tax Regime",
+            ["old", "new"],
             horizontal=True,
             help="New regime: ₹4L basic exemption + ₹60K rebate + Marginal Relief | Old regime: ₹2.5L basic exemption + ₹12.5K rebate"
         )
-        
+
         st.markdown("### 💰 Income Details")
 
         # Create 3 columns for better layout
@@ -771,16 +771,21 @@ with tab1:
         with col1:
             st.markdown("**Employment Income**")
 
-            salary = st.text_input(
-                "Salary Income",
-                placeholder="Enter amount",
+            salary = st.number_input(
+                "Salary Income (₹)",
+                min_value=0.0,
+                step=10000.0,
+                placeholder="Enter amount", # Placeholder added
+                value=None,                 # Value set to None
                 help="Enter your annual salary before standard deduction"
             )
-            salary = float(salary) if salary else 0.0
 
-            business_income = st.text_input(
-                "Business/Professional Income (₹)", 
-                 placeholder="Enter amount",
+            business_income = st.number_input(
+                "Business/Professional Income (₹)",
+                min_value=0.0,
+                step=10000.0,
+                placeholder="Enter amount", # Placeholder added
+                value=None,                 # Value set to None
                 help="Net business or professional income"
             )
 
@@ -788,23 +793,29 @@ with tab1:
             st.markdown("**Property & Other Income**")
 
             house_income = st.number_input(
-                "House Property Income (₹)", 
-                min_value=0.0, 
+                "House Property Income (₹)",
+                min_value=0.0,
                 step=5000.0,
+                placeholder="Enter amount", # Placeholder added
+                value=None,                 # Value set to None
                 help="Net Annual Value (after municipal taxes)"
             )
 
             house_loan_interest = st.number_input(
-                "Interest on House Property Loan (₹)", 
-                min_value=0.0, 
+                "Interest on House Property Loan (₹)",
+                min_value=0.0,
                 step=5000.0,
+                placeholder="Enter amount", # Placeholder added
+                value=None,                 # Value set to None
                 help="Annual interest paid on loan for let-out or self-occupied property"
             )
 
             other_sources = st.number_input(
-                "Other Sources Income (₹)", 
-                min_value=0.0, 
+                "Other Sources Income (₹)",
+                min_value=0.0,
                 step=5000.0,
+                placeholder="Enter amount", # Placeholder added
+                value=None,                 # Value set to None
                 help="Interest, dividends, etc."
             )
 
@@ -812,32 +823,49 @@ with tab1:
             st.markdown("**Capital Gains & TDS**")
 
             stcg = st.number_input(
-                "Short-Term Capital Gains (₹)", 
-                min_value=0.0, 
+                "Short-Term Capital Gains (₹)",
+                min_value=0.0,
                 step=5000.0,
+                placeholder="Enter amount", # Placeholder added
+                value=None,                 # Value set to None
                 help="STCG from equity/mutual funds (15% tax rate)"
             )
 
             ltcg = st.number_input(
-                "Long-Term Capital Gains (₹)", 
-                min_value=0.0, 
+                "Long-Term Capital Gains (₹)",
+                min_value=0.0,
                 step=5000.0,
+                placeholder="Enter amount", # Placeholder added
+                value=None,                 # Value set to None
                 help="LTCG total amount (₹1.25L exemption + 10% tax)"
             )
 
             tds_paid = st.number_input(
-                "TDS/Advance Tax Paid (₹)", 
-                min_value=0.0, 
+                "TDS/Advance Tax Paid (₹)",
+                min_value=0.0,
                 step=1000.0,
+                placeholder="Enter amount", # Placeholder added
+                value=None,                 # Value set to None
                 help="Total tax already paid or deducted at source"
             )
 
         # The submit button MUST be inside the form block
         submitted = st.form_submit_button("🧮 Calculate Tax", use_container_width=True)
-    
+
     st.markdown('</div>', unsafe_allow_html=True)
+
     # Calculate and display results
     if submitted:
+        # IMPORTANT: Convert any empty (None) inputs to 0.0 before calculating
+        salary = salary or 0.0
+        business_income = business_income or 0.0
+        house_income = house_income or 0.0
+        house_loan_interest = house_loan_interest or 0.0
+        other_sources = other_sources or 0.0
+        stcg = stcg or 0.0
+        ltcg = ltcg or 0.0
+        tds_paid = tds_paid or 0.0
+        
         total_income = calculate_total_income(regime, salary, business_income, house_income, other_sources, house_loan_interest)
         
         if regime == 'old':
@@ -848,6 +876,8 @@ with tab1:
         total_tax = base_tax + surcharge + cess
         net_tax = total_tax - tds_paid
         total_taxable_income = total_income + stcg + ltcg
+        
+        # ... (The rest of your result display code remains the same) ...
         
         # Results with enhanced styling
         st.markdown('<div class="result-container">', unsafe_allow_html=True)
@@ -1184,6 +1214,7 @@ st.markdown("""
     <p><small>🆕 Now includes Marginal Relief for New Regime (₹12L-₹12.6L income range)</small></p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
