@@ -559,7 +559,16 @@ if "theme" not in st.session_state:
     st.session_state.theme = "light"
 
 # New, theme-aware CSS. Replace your old CSS block with this.
-st.markdown(f"""
+st.markdown(with st.sidebar:
+    # --- THEME SELECTION ---
+    st.markdown("### 🌗 Display Mode")
+    is_dark = st.toggle("Enable Dark Mode", key="theme_toggle")
+
+    # Store the chosen theme in session state
+    if is_dark:
+        st.session_state.theme = "dark"
+    else:
+        st.session_state.theme = "light"
 <style>
 /* ------------------ THEME VARIABLES ------------------ */
 :root {{
@@ -706,16 +715,6 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Sidebar for regime comparison
-with st.sidebar:
-    # --- THEME SELECTION ---
-    st.markdown("### 🌗 Display Mode")
-    is_dark = st.toggle("Enable Dark Mode", key="theme_toggle")
-
-    # Store the chosen theme in session state
-    if is_dark:
-        st.session_state.theme = "dark"
-    else:
-        st.session_state.theme = "light"
 
     # --- QUICK REGIME COMPARISON ---
     st.markdown("### 📊 Quick Regime Comparison")
@@ -1248,6 +1247,7 @@ st.markdown("""
     <p><small>🆕 Now includes Marginal Relief for New Regime (₹12L-₹12.6L income range)</small></p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
