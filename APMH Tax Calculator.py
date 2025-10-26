@@ -550,24 +550,74 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Advanced CSS styling with light blue theme
-st.markdown("""
-<style>
-/* Base font & layout */
-html, body, [class*="css"]  {
-    font-family: 'Poppins', sans-serif;
-}
+# Initialize session state for the theme if it doesn't exist
+if "theme" not in st.session_state:
+    st.session_state.theme = "light"
 
-/* App background */
-.stApp {
-    background: linear-gradient(135deg, #f9f9ff 0%, #f2f3ff 100%);
-    color: #2f2f2f;
-}
+# New, theme-aware CSS. Replace your old CSS block with this.
+st.markdown(f"""
+<style>
+/* ------------------ THEME VARIABLES ------------------ */
+:root {{
+    --light-bg: #f9f9ff;
+    --light-bg-gradient: linear-gradient(135deg, #f9f9ff 0%, #f2f3ff 100%);
+    --light-text: #2f2f2f;
+    --light-header-bg: linear-gradient(90deg, #825CFF, #6E48AA);
+    --light-header-text: white;
+    --light-container-bg: white;
+    --light-input-bg: white;
+    --light-input-border: #e3e3e3;
+    --light-input-text: #2f2f2f; /* Text color inside inputs for light mode */
+    --light-accent: #825CFF;
+    --light-sidebar-bg: #fafaff;
+}}
+
+[data-theme="dark"] {{
+    --bg-color: #0E1117;
+    --bg-gradient: linear-gradient(135deg, #0E1117 0%, #1a1c24 100%);
+    --text-color: #FAFAFA;
+    --header-bg: linear-gradient(90deg, #6E48AA, #583391);
+    --header-text: white;
+    --container-bg: #1c1e24;
+    --input-bg: #262730;
+    --input-border: #444;
+    --input-text: #FAFAFA; /* IMPORTANT: Visible text for inputs in dark mode */
+    --accent-color: #825CFF;
+    --sidebar-bg: #1c1e24;
+}}
+
+[data-theme="light"] {{
+    --bg-color: var(--light-bg);
+    --bg-gradient: var(--light-bg-gradient);
+    --text-color: var(--light-text);
+    --header-bg: var(--light-header-bg);
+    --header-text: var(--light-header-text);
+    --container-bg: var(--light-container-bg);
+    --input-bg: var(--light-input-bg);
+    --input-border: var(--light-input-border);
+    --input-text: var(--light-input-text);
+    --accent-color: var(--light-accent);
+    --sidebar-bg: var(--light-sidebar-bg);
+}}
+
+/* ------------------ BASE STYLES ------------------ */
+html, body, [class*="css"]  {{
+    font-family: 'Poppins', sans-serif;
+}}
+
+/* Apply theme to the whole app */
+body {{
+    background: var(--bg-gradient);
+    color: var(--text-color);
+}}
+.stApp {{
+    background: var(--bg-color);
+}}
 
 /* Header section */
-.main-header {
-    background: linear-gradient(90deg, #825CFF, #6E48AA);
-    color: white;
+.main-header {{
+    background: var(--header-bg);
+    color: var(--header-text);
     padding: 1.8rem 1rem;
     border-radius: 15px;
     text-align: center;
@@ -575,41 +625,43 @@ html, body, [class*="css"]  {
     font-weight: 600;
     margin-bottom: 2rem;
     box-shadow: 0 5px 15px rgba(130,92,255,0.3);
-}
+}}
 
 /* Input containers */
-.input-container {
-    background: white;
+.input-container, .result-container, .metric-card {{
+    background: var(--container-bg);
     border-radius: 15px;
     padding: 1.5rem 1.8rem;
     margin-bottom: 1.5rem;
     box-shadow: 0 4px 15px rgba(0,0,0,0.06);
     transition: transform 0.2s ease;
-}
-.input-container:hover {
+}}
+.input-container:hover, .metric-card:hover {{
     transform: translateY(-2px);
-}
+}}
 
 /* Labels */
-label, .stTextInput label, .stNumberInput label, .stSelectbox label {
-    color: #444;
+label, .stTextInput label, .stNumberInput label, .stSelectbox label {{
+    color: var(--text-color);
     font-weight: 600;
-}
+}}
 
-/* Text inputs */
-.stTextInput input, .stNumberInput input, .stSelectbox select {
+/* Text inputs - THIS IS THE KEY FIX */
+.stTextInput input, .stNumberInput input, .stSelectbox select {{
+    background-color: var(--input-bg) !important;
+    color: var(--input-text) !important; /* Ensures text is visible */
     border-radius: 30px !important;
-    border: 2px solid #e3e3e3 !important;
+    border: 2px solid var(--input-border) !important;
     padding: 0.5rem 1rem !important;
     font-size: 15px;
-}
-.stTextInput input:focus, .stNumberInput input:focus, .stSelectbox select:focus {
-    border-color: #825CFF !important;
-    box-shadow: 0 0 0 3px rgba(130,92,255,0.2) !important;
-}
+}}
+.stTextInput input:focus, .stNumberInput input:focus, .stSelectbox select:focus {{
+    border-color: var(--accent-color) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-color) 20%, transparent) !important;
+}}
 
 /* Buttons */
-.stButton > button {
+.stButton > button {{
     background: linear-gradient(90deg, #825CFF, #7A5CFF);
     color: white;
     border: none;
@@ -620,68 +672,26 @@ label, .stTextInput label, .stNumberInput label, .stSelectbox label {
     cursor: pointer;
     transition: all 0.3s ease;
     box-shadow: 0 4px 10px rgba(130,92,255,0.3);
-}
-.stButton > button:hover {
+}}
+.stButton > button:hover {{
     background: linear-gradient(90deg, #6B3CFF, #825CFF);
     transform: translateY(-2px);
-}
+}}
 
 /* Result box */
-.result-container {
-    background: linear-gradient(135deg, #f7f4ff, #ffffff);
-    padding: 2rem;
-    border-radius: 15px;
-    text-align: center;
-    box-shadow: 0 4px 20px rgba(130,92,255,0.1);
-}
-.result-container h2 {
-    color: #825CFF;
-    font-weight: 600;
-    margin-bottom: 1rem;
-}
-
-/* Metric cards */
-.metric-card {
-    background: white;
-    border-radius: 15px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    padding: 1.5rem;
-    text-align: center;
-    transition: all 0.2s ease;
-}
-.metric-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba(130,92,255,0.15);
-}
+.result-container h2, .result-container .stMetricLabel {{
+    color: var(--accent-color);
+}}
 
 /* Sidebar */
-[data-testid="stSidebar"] {
-    background: #fafaff;
-    color: #333;
-    box-shadow: 2px 0 10px rgba(0,0,0,0.05);
-}
+[data-testid="stSidebar"] {{
+    background: var(--sidebar-bg);
+}}
 
-/* Tables */
-.stDataFrame {
-    background: white !important;
-    border-radius: 10px !important;
-    color: #222 !important;
-}
-
-/* Mobile adjustments */
-@media (max-width: 768px) {
-    .main-header {
-        font-size: 1.3rem;
-        padding: 1.2rem;
-    }
-    .input-container, .result-container {
-        padding: 1.2rem;
-    }
-}
 </style>
 """, unsafe_allow_html=True)
-
-
+# This line injects the theme attribute into the body of the app
+st.markdown(f"<body data-theme='{st.session_state.theme}'></body>", unsafe_allow_html=True)
 
 # Header
 st.markdown("""
@@ -693,6 +703,17 @@ st.markdown("""
 
 # Sidebar for regime comparison
 with st.sidebar:
+    # --- THEME SELECTION ---
+st.markdown("### 🌗 Display Mode")
+# The toggle's state will determine the theme
+is_dark = st.toggle("Enable Dark Mode", key="theme_toggle")
+
+# Store the chosen theme in session state
+if is_dark:
+    st.session_state.theme = "dark"
+else:
+    st.session_state.theme = "light"
+    
     st.markdown("### 📊 Quick Regime Comparison")
     st.info("""
     **Old Regime Features:**
@@ -1223,6 +1244,7 @@ st.markdown("""
     <p><small>🆕 Now includes Marginal Relief for New Regime (₹12L-₹12.6L income range)</small></p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
