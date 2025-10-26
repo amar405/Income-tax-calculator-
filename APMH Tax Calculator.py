@@ -1178,9 +1178,19 @@ st.info("🎨 Generate professional Excel report with clear visibility and FIXED
 
 if st.button("📊 Generate & Download Excel Report", type="primary"):
     try:
+        # IMPORTANT: Convert any empty (None) inputs to 0.0 before generating the report
+        salary = salary or 0.0
+        business_income = business_income or 0.0
+        house_income = house_income or 0.0
+        house_loan_interest = house_loan_interest or 0.0
+        other_sources = other_sources or 0.0
+        stcg = stcg or 0.0
+        ltcg = ltcg or 0.0
+        tds_paid = tds_paid or 0.0 # This isn't used in the Excel function, but it's good practice
+
         # Create professional Excel with fixed syntax
         excel_output = create_professional_excel_report(
-            salary, business_income, house_income, other_sources, 
+            salary, business_income, house_income, other_sources,
             stcg, ltcg, regime, house_loan_interest
         )
 
@@ -1198,14 +1208,13 @@ if st.button("📊 Generate & Download Excel Report", type="primary"):
         st.info("✅ FIXED FEATURES:")
         st.write("• 🔧 **Syntax Error Fixed**: No more quote conflicts")
         st.write("• 🎨 **Clear Headers**: WHITE text on ORANGE background")
-        st.write("• 📏 **Professional Formatting**: Borders, colors, and alignment") 
+        st.write("• 📏 **Professional Formatting**: Borders, colors, and alignment")
         st.write("• 🔢 **Currency Formatting**: Proper ₹ symbol display")
         st.write("• 📊 **A.Y. 2026-27**: Correct assessment year")
 
     except Exception as e:
         st.error(f"❌ Error generating Excel: {e}")
         st.info("💡 Install xlsxwriter for best results: pip install xlsxwriter")
-
 st.markdown("---")
 st.markdown("""
 <div style='text-align: center; color: #666; padding: 20px;'>
@@ -1214,6 +1223,7 @@ st.markdown("""
     <p><small>🆕 Now includes Marginal Relief for New Regime (₹12L-₹12.6L income range)</small></p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
