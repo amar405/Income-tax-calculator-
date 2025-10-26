@@ -552,150 +552,133 @@ st.set_page_config(
 
 # Advanced CSS styling with light blue theme
 st.markdown("""
-    <style>
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
+<style>
+/* Base font & layout */
+html, body, [class*="css"]  {
+    font-family: 'Poppins', sans-serif;
+}
 
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+/* App background */
+.stApp {
+    background: linear-gradient(135deg, #f9f9ff 0%, #f2f3ff 100%);
+    color: #2f2f2f;
+}
 
-    body, .stApp {
-        font-family: 'Poppins', sans-serif;
-        background: linear-gradient(135deg, #825CFF 0%, #A88BFF 100%);
-        min-height: 100vh;
-        color: #333;
-    }
+/* Header section */
+.main-header {
+    background: linear-gradient(90deg, #825CFF, #6E48AA);
+    color: white;
+    padding: 1.8rem 1rem;
+    border-radius: 15px;
+    text-align: center;
+    font-size: 1.6rem;
+    font-weight: 600;
+    margin-bottom: 2rem;
+    box-shadow: 0 5px 15px rgba(130,92,255,0.3);
+}
 
-    /* Main Page Layout */
-    .main {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding: 2rem 1rem;
-    }
+/* Input containers */
+.input-container {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem 1.8rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+    transition: transform 0.2s ease;
+}
+.input-container:hover {
+    transform: translateY(-2px);
+}
 
-    /* Header Section */
+/* Labels */
+label, .stTextInput label, .stNumberInput label, .stSelectbox label {
+    color: #444;
+    font-weight: 600;
+}
+
+/* Text inputs */
+.stTextInput input, .stNumberInput input, .stSelectbox select {
+    border-radius: 30px !important;
+    border: 2px solid #e3e3e3 !important;
+    padding: 0.5rem 1rem !important;
+    font-size: 15px;
+}
+.stTextInput input:focus, .stNumberInput input:focus, .stSelectbox select:focus {
+    border-color: #825CFF !important;
+    box-shadow: 0 0 0 3px rgba(130,92,255,0.2) !important;
+}
+
+/* Buttons */
+.stButton > button {
+    background: linear-gradient(90deg, #825CFF, #7A5CFF);
+    color: white;
+    border: none;
+    border-radius: 30px;
+    padding: 0.7rem 1.8rem;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(130,92,255,0.3);
+}
+.stButton > button:hover {
+    background: linear-gradient(90deg, #6B3CFF, #825CFF);
+    transform: translateY(-2px);
+}
+
+/* Result box */
+.result-container {
+    background: linear-gradient(135deg, #f7f4ff, #ffffff);
+    padding: 2rem;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(130,92,255,0.1);
+}
+.result-container h2 {
+    color: #825CFF;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+/* Metric cards */
+.metric-card {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    padding: 1.5rem;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+.metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(130,92,255,0.15);
+}
+
+/* Sidebar */
+[data-testid="stSidebar"] {
+    background: #fafaff;
+    color: #333;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+}
+
+/* Tables */
+.stDataFrame {
+    background: white !important;
+    border-radius: 10px !important;
+    color: #222 !important;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
     .main-header {
-        background: white;
-        padding: 25px;
-        border-radius: 15px;
-        text-align: center;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        margin-bottom: 2rem;
-        animation: fadeInUp 0.5s ease-in-out;
-        color: #333;
+        font-size: 1.3rem;
+        padding: 1.2rem;
     }
-
-    .main-header h1 {
-        font-size: 26px;
-        color: #4B0082;
-        margin-bottom: 5px;
-    }
-
-    .main-header p {
-        font-size: 16px;
-        color: #666;
-    }
-
-    /* Input and Result Containers */
     .input-container, .result-container {
-        background: white;
-        padding: 30px;
-        border-radius: 15px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        margin-bottom: 30px;
-        animation: fadeInUp 0.6s ease-in-out;
+        padding: 1.2rem;
     }
-
-    /* Buttons */
-    .stButton > button {
-        background-color: #825CFF;
-        color: white;
-        border: none;
-        border-radius: 30px;
-        padding: 12px 30px;
-        font-size: 16px;
-        font-family: 'Poppins', sans-serif;
-        cursor: pointer;
-        box-shadow: 0 8px 20px rgba(130, 92, 255, 0.4);
-        transition: all 0.3s ease;
-        font-weight: 600;
-    }
-
-    .stButton > button:hover {
-        background-color: #6334fd;
-        transform: translateY(-2px);
-    }
-
-    /* Metric Cards */
-    .metric-card {
-        background: #FFFFFF;
-        border-radius: 12px;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-        text-align: center;
-        padding: 20px;
-        color: #333;
-    }
-
-    /* Sidebar */
-    .sidebar .sidebar-content {
-        background: #F8F6FF;
-        color: #333;
-        border-right: 2px solid rgba(130, 92, 255, 0.2);
-    }
-
-    /* Tabs */
-    .stTabs [data-baseweb="tab-list"] {
-        background-color: #F3EEFF;
-        border-radius: 10px;
-        margin-bottom: 1rem;
-    }
-
-    .stTabs [data-baseweb="tab"] {
-        color: #4B0082;
-        font-weight: 500;
-    }
-
-    .stTabs [aria-selected="true"] {
-        background-color: #825CFF !important;
-        color: white !important;
-        border-radius: 10px;
-    }
-
-    /* Info/Alert Boxes */
-    .stAlert {
-        background-color: #F3EEFF;
-        border-left: 5px solid #825CFF;
-        color: #333;
-        border-radius: 10px;
-    }
-
-    /* Fade In Animation */
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    /* Mobile Responsive */
-    @media (max-width: 768px) {
-        .main-header, .input-container, .result-container {
-            padding: 20px;
-        }
-
-        .stButton > button {
-            width: 100%;
-            padding: 12px;
-        }
-    }
-    </style>
+}
+</style>
 """, unsafe_allow_html=True)
 
 
@@ -1195,6 +1178,7 @@ st.markdown("""
     <p><small>🆕 Now includes Marginal Relief for New Regime (₹12L-₹12.6L income range)</small></p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
