@@ -701,19 +701,41 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# Sidebar for regime comparison
 with st.sidebar:
-    # --- THEME SELECTION ---
-st.markdown("### 🌗 Display Mode")
-# The toggle's state will determine the theme
-is_dark = st.toggle("Enable Dark Mode", key="theme_toggle")
+    with st.sidebar:
+    # --- THEME SELECTION (NOW CORRECTLY INDENTED) ---
+    st.markdown("### 🌗 Display Mode")
+    # The toggle's state will determine the theme
+    is_dark = st.toggle("Enable Dark Mode", key="theme_toggle")
 
-# Store the chosen theme in session state
-if is_dark:
-    st.session_state.theme = "dark"
-else:
-    st.session_state.theme = "light"
+    # Store the chosen theme in session state
+    if is_dark:
+        st.session_state.theme = "dark"
+    else:
+        st.session_state.theme = "light"
+
+    # --- (The rest of your original sidebar code goes here, also indented) ---
+    st.markdown("### 📊 Quick Regime Comparison")
+    st.info("""
+    **Old Regime Features:**
+    - Standard deduction (₹50,000)
+    - Multiple deductions available
+    - Basic exemption: ₹2.5L
+    - **Rebate: Up to ₹5L income, max ₹12.5K**
     
+    **New Regime Features:**
+    - Higher standard deduction (₹75,000)
+    - Limited deductions
+    - Basic exemption: ₹4L
+    - **Rebate: Up to ₹12L income, max ₹60K**
+    - **🆕 Marginal Relief: ₹12L-₹12.6L income**
+    - **Smart CG exemption utilization**
+    """)
+    
+    st.markdown("### 📈 Tax Slabs")
+    # ... and so on for the rest of your sidebar content.
+# Sidebar for regime comparison
+with st.sidebar:    
     st.markdown("### 📊 Quick Regime Comparison")
     st.info("""
     **Old Regime Features:**
@@ -1244,6 +1266,7 @@ st.markdown("""
     <p><small>🆕 Now includes Marginal Relief for New Regime (₹12L-₹12.6L income range)</small></p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
