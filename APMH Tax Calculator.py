@@ -773,7 +773,7 @@ with tab1:
             st.markdown("**Employment Income**")
             salary = st.number_input(
                 "Salary Income (₹)", 
-                min_value=None, placeholder="Enter amount", 
+                min_value=None, 
                 step=10000.0,
                 help="Enter your annual salary before standard deduction"
             )
@@ -1178,6 +1178,7 @@ st.markdown("""
     <p><small>🆕 Now includes Marginal Relief for New Regime (₹12L-₹12.6L income range)</small></p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
