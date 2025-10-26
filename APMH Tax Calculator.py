@@ -680,7 +680,7 @@ tab1, tab2, tab3 = st.tabs(["🧮 Calculate Tax", "📊 Analysis", "📋 Tax Pla
 
 with tab1:
     # Input form with enhanced styling
-    st.markdown('<div class="input-container">', unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align: center;'>Use New Tax Regime For better results</h3>", unsafe_allow_html=True)
 
     with st.form("tax_form"):
         st.markdown("### 🔧 Tax Regime Selection")
@@ -1150,4 +1150,5 @@ st.markdown("""
     <p><small>🆕 Now includes Marginal Relief for New Regime (₹12L-₹12.6L income range)</small></p>
 </div>
 """, unsafe_allow_html=True)
+
 
