@@ -770,13 +770,14 @@ with tab1:
         col1, col2, col3 = st.columns(3)
         
         with col1:
-            st.markdown("**Employment Income**")
-            salary = st.number_input(
-                "Salary Income (₹)", 
-                min_value=None, 
-                step=10000.0,
-                help="Enter your annual salary before standard deduction"
-            )
+    st.markdown("**Employment Income**")
+    salary = st.text_input(
+        "Salary Income",
+        placeholder="Enter amount",
+        help="Enter your annual salary before standard deduction"
+    )
+    salary = float(salary) if salary else 0.0
+
             business_income = st.number_input(
                 "Business/Professional Income (₹)", 
                 min_value=0.0, 
@@ -1178,6 +1179,7 @@ st.markdown("""
     <p><small>🆕 Now includes Marginal Relief for New Regime (₹12L-₹12.6L income range)</small></p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
