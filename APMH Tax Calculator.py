@@ -5,6 +5,10 @@ import plotly.graph_objects as go
 from io import BytesIO
 from datetime import datetime
 
+# 1. INITIALIZE THEME IN SESSION STATE
+if "theme" not in st.session_state:
+    st.session_state.theme = "light"
+    
 # TAX CALCULATION FUNCTIONS (Final Corrected Version with Marginal Relief)
 def calculate_total_income(regime, salary, business_income, house_income, other_sources, house_loan_interest=0):
     # Salary – Apply standard deduction
@@ -1244,6 +1248,7 @@ st.markdown("""
     <p><small>🆕 Now includes Marginal Relief for New Regime (₹12L-₹12.6L income range)</small></p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
