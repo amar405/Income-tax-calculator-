@@ -778,10 +778,9 @@ with tab1:
             )
             salary = float(salary) if salary else 0.0
 
-            business_income = st.number_input(
+            business_income = st.text_input(
                 "Business/Professional Income (₹)", 
-                min_value=0.0, 
-                step=10000.0,
+                 placeholder="Enter amount",
                 help="Net business or professional income"
             )
 
@@ -1185,6 +1184,7 @@ st.markdown("""
     <p><small>🆕 Now includes Marginal Relief for New Regime (₹12L-₹12.6L income range)</small></p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
