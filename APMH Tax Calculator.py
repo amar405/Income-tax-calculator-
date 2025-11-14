@@ -755,7 +755,7 @@ with tab1:
                 step=5000.0,
                 placeholder="Enter amount", # Placeholder added
                 value=None,                 # Value set to None
-                help="STCG from equity/mutual funds (15% tax rate)"
+                help="STCG from equity/mutual funds (20% tax rate)"
             )
 
             ltcg = st.number_input(
@@ -764,7 +764,7 @@ with tab1:
                 step=5000.0,
                 placeholder="Enter amount", # Placeholder added
                 value=None,                 # Value set to None
-                help="LTCG total amount (₹1.25L exemption + 10% tax)"
+                help="LTCG total amount (₹1.25L exemption + 12.5% tax)"
             )
 
             tds_paid = st.number_input(
@@ -1150,5 +1150,6 @@ st.markdown("""
     <p><small>🆕 Now includes Marginal Relief for New Regime (₹12L-₹12.6L income range)</small></p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
