@@ -188,7 +188,7 @@ def calculate_tax_new_regime(total_income, stcg, ltcg):
     return round(max(total_tax_before_surcharge, 0), 2), round(surcharge, 2), round(cess, 2), round(rebate_applied, 2), round(marginal_relief_applied, 2)
 
 # PROFESSIONAL EXCEL EXPORT WITH FIXED SYNTAX
-def create_professional_excel_report(salary, business_income, house_income, other_sources, stcg, ltcg, regime, house_loan_interest=0):
+def create_professional_excel_report(salary, business_income, house_income, other_sources, stcg, ltcg, regime, house_loan_interest=0, tds_paid=0):
     """Create Excel report with professional colors and improved visibility using xlsxwriter"""
 
     # Calculate processed incomes
@@ -201,6 +201,12 @@ def create_professional_excel_report(salary, business_income, house_income, othe
         tax, surcharge, cess, rebate, marginal_relief = calculate_tax_new_regime(total_income_calc, stcg, max(0, ltcg))
     else:
         tax, surcharge, cess, rebate, marginal_relief = calculate_tax_old_regime(total_income_calc, stcg, max(0, ltcg))
+    
+    total_tax = tax + surcharge + cess
+    
+    # Calculate Advance Tax Liability
+    net_tax_liability = max(0, total_tax - tds_paid)
+    advance_tax_applicable = net_tax_liability >= 10000
 
     # Create Excel file in memory
     output = BytesIO()
@@ -276,6 +282,14 @@ def create_professional_excel_report(salary, business_income, house_income, othe
             'border_color': '#000000'
         })
 
+        center_format = workbook.add_format({
+            'font_size': 10,
+            'align': 'center',
+            'valign': 'vcenter',
+            'border': 1,
+            'border_color': '#000000'
+        })
+
         total_format = workbook.add_format({
             'font_size': 11,
             'bold': True,
@@ -285,6 +299,18 @@ def create_professional_excel_report(salary, business_income, house_income, othe
             'bg_color': '#E8F4FD',
             'border': 1,
             'border_color': '#000000'
+        })
+        
+        negative_format = workbook.add_format({
+            'font_size': 11,
+            'bold': True,
+            'align': 'right',
+            'valign': 'vcenter',
+            'num_format': '"- "₹#,##0.00',
+            'bg_color': '#E8F4FD',
+            'border': 1,
+            'border_color': '#000000',
+            'font_color': 'red'
         })
 
         # Set column widths
@@ -438,9 +464,57 @@ def create_professional_excel_report(salary, business_income, house_income, othe
             worksheet.write(row, 3, marginal_relief, amount_format)
             row += 1
 
-        total_tax = tax + surcharge + cess
         worksheet.write(row, 0, 'TOTAL TAX LIABILITY', data_format)
         worksheet.write(row, 3, total_tax, total_format)
+        row += 1
+        
+        # TDS and Net Payable
+        if tds_paid > 0:
+            worksheet.write(row, 0, 'Less: TDS / Advance Tax Paid', data_format)
+            worksheet.write(row, 3, tds_paid, amount_format)
+            row += 1
+            
+        net_tax_final = total_tax - tds_paid
+        final_label = 'NET TAX PAYABLE' if net_tax_final >= 0 else 'NET REFUND DUE'
+        final_fmt = total_format if net_tax_final >= 0 else negative_format
+        
+        worksheet.write(row, 0, final_label, data_format)
+        worksheet.write(row, 3, abs(net_tax_final), final_fmt)
+        row += 2
+        
+        # Advance Tax Schedule (New Section)
+        if advance_tax_applicable:
+            worksheet.merge_range(f'A{row+1}:D{row+1}', 'ADVANCE TAX LIABILITY SCHEDULE', section_format)
+            row += 2
+            
+            # Calculate Installments
+            q1_amt = round(net_tax_liability * 0.15)
+            q2_amt = round(net_tax_liability * 0.45) - q1_amt
+            q3_amt = round(net_tax_liability * 0.75) - (q1_amt + q2_amt)
+            q4_amt = round(net_tax_liability) - (q1_amt + q2_amt + q3_amt)
+            
+            # Table Headers
+            worksheet.write(row, 0, 'Quarter / Due Date', header_format)
+            worksheet.write(row, 1, 'Cumulative %', header_format)
+            worksheet.write(row, 2, 'Installment Amount', header_format)
+            worksheet.write(row, 3, 'Cumulative Payable', header_format)
+            row += 1
+            
+            installments = [
+                ("Q1 (Due: 15th June)", "15%", q1_amt, q1_amt),
+                ("Q2 (Due: 15th Sept)", "45%", q2_amt, q1_amt + q2_amt),
+                ("Q3 (Due: 15th Dec)", "75%", q3_amt, q1_amt + q2_amt + q3_amt),
+                ("Q4 (Due: 15th Mar)", "100%", q4_amt, q1_amt + q2_amt + q3_amt + q4_amt),
+            ]
+            
+            for label, pct, inst_amt, cum_amt in installments:
+                worksheet.write(row, 0, label, data_format)
+                worksheet.write(row, 1, pct, center_format)
+                worksheet.write(row, 2, inst_amt, amount_format)
+                worksheet.write(row, 3, cum_amt, amount_format)
+                row += 1
+            
+            worksheet.merge_range(f'A{row+1}:D{row+1}', 'Note: Interest u/s 234B/234C applicable if delayed.', bullet_format)
 
         workbook.close()
         output.seek(0)
@@ -536,6 +610,34 @@ def create_professional_excel_report(salary, business_income, house_income, othe
 
         total_tax = tax + surcharge + cess
         report_data.append(["TOTAL TAX LIABILITY", "", "", f"₹{total_tax:,.2f}"])
+        
+        # TDS and Advance Tax in Pandas fallback
+        if tds_paid > 0:
+             report_data.append(["Less: TDS / Advance Tax Paid", "", "", f"₹{tds_paid:,.2f}"])
+        
+        net_val = total_tax - tds_paid
+        lbl = "NET TAX PAYABLE" if net_val >= 0 else "NET REFUND DUE"
+        report_data.append([lbl, "", "", f"₹{abs(net_val):,.2f}"])
+        
+        # Advance Tax Schedule in Pandas fallback
+        if advance_tax_applicable:
+             report_data.extend([
+                 ["", "", "", ""],
+                 ["ADVANCE TAX LIABILITY SCHEDULE", "", "", ""],
+                 ["Quarter / Due Date", "Cumulative %", "Installment", "Cumulative Payable"]
+             ])
+             
+             q1_amt = round(net_tax_liability * 0.15)
+             q2_amt = round(net_tax_liability * 0.45) - q1_amt
+             q3_amt = round(net_tax_liability * 0.75) - (q1_amt + q2_amt)
+             q4_amt = round(net_tax_liability) - (q1_amt + q2_amt + q3_amt)
+             
+             report_data.extend([
+                 ["Q1 (Due: 15th June)", "15%", f"₹{q1_amt:,.2f}", f"₹{q1_amt:,.2f}"],
+                 ["Q2 (Due: 15th Sept)", "45%", f"₹{q2_amt:,.2f}", f"₹{q1_amt + q2_amt:,.2f}"],
+                 ["Q3 (Due: 15th Dec)", "75%", f"₹{q3_amt:,.2f}", f"₹{q1_amt + q2_amt + q3_amt:,.2f}"],
+                 ["Q4 (Due: 15th Mar)", "100%", f"₹{q4_amt:,.2f}", f"₹{q1_amt + q2_amt + q3_amt + q4_amt:,.2f}"]
+             ])
 
         df = pd.DataFrame(report_data)
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
@@ -686,7 +788,7 @@ with tab1:
         st.markdown("### 🔧 Tax Regime Selection")
         regime = st.radio(
             "Select Tax Regime",
-            ["old", "new"],
+            ["new", "old"], # CHANGED: New regime is now first (default)
             horizontal=True,
             help="New regime: ₹4L basic exemption + ₹60K rebate + Marginal Relief | Old regime: ₹2.5L basic exemption + ₹12.5K rebate"
         )
@@ -1162,12 +1264,12 @@ if st.button("📊 Generate & Download Excel Report", type="primary"):
         other_sources = other_sources or 0.0
         stcg = stcg or 0.0
         ltcg = ltcg or 0.0
-        tds_paid = tds_paid or 0.0 # This isn't used in the Excel function, but it's good practice
+        tds_paid = tds_paid or 0.0 # This is now used!
 
         # Create professional Excel with fixed syntax
         excel_output = create_professional_excel_report(
             salary, business_income, house_income, other_sources,
-            stcg, ltcg, regime, house_loan_interest
+            stcg, ltcg, regime, house_loan_interest, tds_paid
         )
 
         st.success("✅ Professional Excel report generated successfully! 🎨")
