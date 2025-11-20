@@ -675,8 +675,8 @@ with st.sidebar:
         - **LTCG:** 12.5% (above ₹1.25L)
         """)
 
-# Main content area with tabs
-tab1, tab2, tab3 = st.tabs(["🧮 Calculate Tax", "📊 Analysis", "📋 Tax Planning"])
+# Main content area with tabs - UPDATED WITH 4TH TAB
+tab1, tab2, tab3, tab4 = st.tabs(["🧮 Calculate Tax", "📊 Analysis", "📋 Tax Planning", "📅 Advance Tax"])
 
 with tab1:
     # Input form with enhanced styling
@@ -803,8 +803,6 @@ with tab1:
         total_tax = base_tax + surcharge + cess
         net_tax = total_tax - tds_paid
         total_taxable_income = total_income + stcg + ltcg
-        
-        # ... (The rest of your result display code remains the same) ...
         
         # Results with enhanced styling
         st.markdown('<div class="result-container">', unsafe_allow_html=True)
@@ -1096,6 +1094,57 @@ with tab3:
     })
     st.dataframe(tax_dates, use_container_width=True)
 
+# NEW TAB FOR ADVANCE TAX
+with tab4:
+    st.markdown("### 📅 Advance Tax Liability Schedule")
+    
+    if 'total_tax' in locals() and total_tax > 0:
+        # Logic for Net Tax for Advance Tax purposes
+        # Advance Tax is calculated on Tax Liability - TDS
+        net_advance_tax_liability = max(0, total_tax - (tds_paid if 'tds_paid' in locals() else 0))
+        
+        if net_advance_tax_liability < 10000:
+            st.success(f"✅ **No Advance Tax Liability**")
+            st.info(f"Since your net tax payable (₹{net_advance_tax_liability:,.0f}) is less than ₹10,000, you are not required to pay Advance Tax. You can pay the due amount while filing your ITR.")
+        else:
+            st.warning(f"⚠️ **Advance Tax Applicable**")
+            st.write(f"Net Tax Liability for Advance Tax: **₹{net_advance_tax_liability:,.2f}**")
+            
+            # Calculate Installments based on cumulative percentages
+            q1_amt = round(net_advance_tax_liability * 0.15)
+            q2_amt = round(net_advance_tax_liability * 0.45) - q1_amt
+            q3_amt = round(net_advance_tax_liability * 0.75) - (q1_amt + q2_amt)
+            q4_amt = round(net_advance_tax_liability) - (q1_amt + q2_amt + q3_amt)
+            
+            # Create Data
+            adv_tax_data = {
+                "Quarter": ["Q1", "Q2", "Q3", "Q4"],
+                "Due Date": ["15th June", "15th September", "15th December", "15th March"],
+                "Cumulative %": ["15%", "45%", "75%", "100%"],
+                "Installment Amount (₹)": [f"₹{q1_amt:,.0f}", f"₹{q2_amt:,.0f}", f"₹{q3_amt:,.0f}", f"₹{q4_amt:,.0f}"],
+                "Cumulative Payable (₹)": [f"₹{q1_amt:,.0f}", f"₹{q1_amt + q2_amt:,.0f}", f"₹{q1_amt + q2_amt + q3_amt:,.0f}", f"₹{q1_amt + q2_amt + q3_amt + q4_amt:,.0f}"]
+            }
+            
+            # Display Table
+            adv_df = pd.DataFrame(adv_tax_data)
+            st.dataframe(adv_df, use_container_width=True)
+            
+            # Chart
+            fig_adv = px.bar(
+                x=["Q1 (June)", "Q2 (Sept)", "Q3 (Dec)", "Q4 (March)"],
+                y=[q1_amt, q2_amt, q3_amt, q4_amt],
+                title="Advance Tax Installments Payment Schedule",
+                labels={'x': 'Quarter', 'y': 'Amount Payable (₹)'},
+                text=[f"₹{x:,.0f}" for x in [q1_amt, q2_amt, q3_amt, q4_amt]]
+            )
+            fig_adv.update_traces(marker_color='#FF8C00', textposition='auto')
+            st.plotly_chart(fig_adv, use_container_width=True)
+            
+            st.info("💡 **Note:** The amounts shown above are the installment amounts payable for that specific quarter, assuming no previous arrears.")
+            
+    else:
+        st.info("👋 Please calculate your tax in the 'Calculate Tax' tab first to see the Advance Tax schedule.")
+
 # Footer
 
 # Excel Export Section with FIXED SYNTAX
@@ -1150,6 +1199,3 @@ st.markdown("""
     <p><small>🆕 Now includes Marginal Relief for New Regime (₹12L-₹12.6L income range)</small></p>
 </div>
 """, unsafe_allow_html=True)
-
-
-
