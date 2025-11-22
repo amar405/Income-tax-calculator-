@@ -2,31 +2,6 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-
-# ---- Correct Surcharge Helper Functions ----
-def surcharge_on_regular_income(total_income, tax_regular, regime):
-    if total_income <= 50_00_000:
-        return tax_regular * 0.0
-    elif total_income <= 1_00_00_000:
-        return tax_regular * 0.10
-    elif total_income <= 2_00_00_000:
-        return tax_regular * 0.15
-    elif total_income <= 5_00_00_000:
-        return tax_regular * 0.25
-    else:
-        return tax_regular * 0.37
-
-def surcharge_on_capital_gains(tax_cg, total_income):
-    if total_income <= 50_00_000:
-        return tax_cg * 0.0
-    elif total_income <= 1_00_00_000:
-        return tax_cg * 0.10
-    elif total_income <= 2_00_00_000:
-        return tax_cg * 0.15
-    else:
-        return tax_cg * 0.15  # capped
-# ---- End Helper Functions ----
-
 from io import BytesIO
 from datetime import datetime
 
@@ -63,6 +38,31 @@ def calculate_surcharge_rate(total_income, regime, capital_gains_income):
         rate = 0.15
 
     return rate
+
+
+# ---- Correct Surcharge Helper Functions ----
+def surcharge_on_regular_income(total_income, tax_regular, regime):
+    if total_income <= 50_00_000:
+        return tax_regular * 0.0
+    elif total_income <= 1_00_00_000:
+        return tax_regular * 0.10
+    elif total_income <= 2_00_00_000:
+        return tax_regular * 0.15
+    elif total_income <= 5_00_00_000:
+        return tax_regular * 0.25
+    else:
+        return tax_regular * 0.37
+
+def surcharge_on_capital_gains(tax_cg, total_income):
+    if total_income <= 50_00_000:
+        return tax_cg * 0.0
+    elif total_income <= 1_00_00_000:
+        return tax_cg * 0.10
+    elif total_income <= 2_00_00_000:
+        return tax_cg * 0.15
+    else:
+        return tax_cg * 0.15  # capped
+# ---- End Helper Functions ----
 
 def calculate_tax_old_regime(total_income, stcg, ltcg):
     # Base tax (normal income)
