@@ -39,31 +39,6 @@ def calculate_surcharge_rate(total_income, regime, capital_gains_income):
 
     return rate
 
-
-# ---- Correct Surcharge Helper Functions ----
-def surcharge_on_regular_income(total_income, tax_regular, regime):
-    if total_income <= 50_00_000:
-        return tax_regular * 0.0
-    elif total_income <= 1_00_00_000:
-        return tax_regular * 0.10
-    elif total_income <= 2_00_00_000:
-        return tax_regular * 0.15
-    elif total_income <= 5_00_00_000:
-        return tax_regular * 0.25
-    else:
-        return tax_regular * 0.37
-
-def surcharge_on_capital_gains(tax_cg, total_income):
-    if total_income <= 50_00_000:
-        return tax_cg * 0.0
-    elif total_income <= 1_00_00_000:
-        return tax_cg * 0.10
-    elif total_income <= 2_00_00_000:
-        return tax_cg * 0.15
-    else:
-        return tax_cg * 0.15  # capped
-# ---- End Helper Functions ----
-
 def calculate_tax_old_regime(total_income, stcg, ltcg):
     # Base tax (normal income)
     tax = 0
@@ -94,7 +69,7 @@ def calculate_tax_old_regime(total_income, stcg, ltcg):
 
     # Surcharge
     surcharge_rate = calculate_surcharge_rate(total_income + stcg + ltcg, "old", stcg + ltcg)
-    surcharge = surcharge_on_regular_income(total_income + stcg + ltcg, tax_after_rebate, 'old') + surcharge_on_capital_gains(cg_tax, total_income + stcg + ltcg)
+    surcharge = total_tax_before_surcharge * surcharge_rate
 
     # Cess
     cess = (total_tax_before_surcharge + surcharge) * 0.04
@@ -205,7 +180,7 @@ def calculate_tax_new_regime(total_income, stcg, ltcg):
 
     # Step 9: Calculate surcharge
     surcharge_rate = calculate_surcharge_rate(total_income + stcg + ltcg, "new", stcg + ltcg)
-    surcharge = surcharge_on_regular_income(total_income + stcg + ltcg, tax_after_rebate, 'old') + surcharge_on_capital_gains(cg_tax, total_income + stcg + ltcg)
+    surcharge = total_tax_before_surcharge * surcharge_rate
 
     # Step 10: Calculate cess
     cess = (total_tax_before_surcharge + surcharge) * 0.04
