@@ -21,23 +21,28 @@ def calculate_total_income(regime, salary, business_income, house_income, other_
     total = max(0, salary) + max(0, business_income) + max(0, house_income) + max(0, other_sources)
     return total
 
-def calculate_surcharge_rate(total_income, regime, capital_gains_income):
-    """Determine surcharge rate based on total income & regime, with CG max 15%"""
-    rate = 0
-    if total_income > 50000000:  # > 5 cr
-        rate = 0.37 if regime == "old" else 0.25
-    elif total_income > 20000000:  # 2–5 cr
-        rate = 0.25
-    elif total_income > 10000000:  # 1–2 cr
-        rate = 0.15
-    elif total_income > 5000000:  # 50L–1cr
-        rate = 0.10
-
-    # Capital gains surcharge cap at 15%
-    if capital_gains_income > 0 and rate > 0.15:
-        rate = 0.15
-
-    return rate
+def calculate_surcharge_separate(tax_other, tax_cg, total_income, regime):
+    """Calculate surcharge separately for regular and CG income"""
+    
+    # Determine slab rate based on total income
+    if total_income > 50000000:
+        slab_rate = 0.37 if regime == "old" else 0.25
+    elif total_income > 20000000:
+        slab_rate = 0.25
+    elif total_income > 10000000:
+        slab_rate = 0.15
+    elif total_income > 5000000:
+        slab_rate = 0.10
+    else:
+        slab_rate = 0.00
+    
+    # Apply surcharge separately
+    surcharge_on_other = tax_other * slab_rate  # No cap
+    surcharge_on_cg = tax_cg * min(slab_rate, 0.15)  # Capped at 15%
+    
+    total_surcharge = surcharge_on_other + surcharge_on_cg
+    
+    return total_surcharge, slab_rate
 
 def calculate_tax_old_regime(total_income, stcg, ltcg):
     # Base tax (normal income)
@@ -68,8 +73,9 @@ def calculate_tax_old_regime(total_income, stcg, ltcg):
     total_tax_before_surcharge = tax_after_rebate + cg_tax
 
     # Surcharge
-    surcharge_rate = calculate_surcharge_rate(total_income + stcg + ltcg, "old", stcg + ltcg)
-    surcharge = total_tax_before_surcharge * surcharge_rate
+    surcharge, slab_rate = calculate_surcharge_separate(
+    tax_after_rebate, cg_tax, total_income + stcg + ltcg, "old"
+    )
 
     # Cess
     cess = (total_tax_before_surcharge + surcharge) * 0.04
@@ -179,8 +185,9 @@ def calculate_tax_new_regime(total_income, stcg, ltcg):
             total_tax_before_surcharge = marginal_relief_amount
 
     # Step 9: Calculate surcharge
-    surcharge_rate = calculate_surcharge_rate(total_income + stcg + ltcg, "new", stcg + ltcg)
-    surcharge = total_tax_before_surcharge * surcharge_rate
+    surcharge, slab_rate = calculate_surcharge_separate(
+    regular_tax_after_rebate, cg_tax, total_income + stcg + ltcg, "new"
+    )
 
     # Step 10: Calculate cess
     cess = (total_tax_before_surcharge + surcharge) * 0.04
@@ -1301,3 +1308,4 @@ st.markdown("""
     <p><small>🆕 Now includes Marginal Relief for New Regime (₹12L-₹12.6L income range)</small></p>
 </div>
 """, unsafe_allow_html=True)
+
