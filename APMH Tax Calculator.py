@@ -62,14 +62,13 @@ def calculate_tax_old_regime(total_income, stcg, ltcg):
         cg_tax += (ltcg - 125000) * 0.125
 
     # Apply rebate ONLY to regular income tax (NOT capital gains)
-rebate_applied = 0
-total_taxable_income = total_income + stcg + ltcg  # ✅ ADD THIS LINE
-
-if total_taxable_income <= 500000:  # ✅ CHANGE THIS LINE
-    rebate_applied = min(12500, tax)
-    tax_after_rebate = max(0, tax - rebate_applied)
-else:
-    tax_after_rebate = tax
+    rebate_applied = 0
+    total_taxable_income = total_income + stcg + ltcg
+    if total_taxable_income <= 500000:  # ₹5L limit
+        rebate_applied = min(12500, tax)  # Max ₹12.5K rebate on regular tax only
+        tax_after_rebate = max(0, tax - rebate_applied)
+    else:
+        tax_after_rebate = tax
 
     # Total tax = Regular tax (after rebate) + Capital gains tax (no rebate)
     total_tax_before_surcharge = tax_after_rebate + cg_tax
@@ -81,7 +80,7 @@ else:
 
     # Cess
     cess = (total_tax_before_surcharge + surcharge) * 0.04
-    
+
     return round(max(total_tax_before_surcharge, 0), 2), round(surcharge, 2), round(cess, 2), round(rebate_applied, 2), 0
 
 def calculate_tax_new_regime(total_income, stcg, ltcg):
@@ -160,14 +159,13 @@ def calculate_tax_new_regime(total_income, stcg, ltcg):
     cg_tax = taxable_stcg * 0.20 + final_taxable_ltcg * 0.125
 
     # Step 6: Apply rebate ONLY to regular income tax (NOT capital gains)
-rebate_applied = 0
-total_taxable_income = total_income + stcg + ltcg  # ✅ ADD THIS LINE
-
-if total_taxable_income <= 1200000:  # ✅ CHANGE THIS LINE
-    rebate_applied = min(60000, regular_tax)
-    regular_tax_after_rebate = max(0, regular_tax - rebate_applied)
-else:
-    regular_tax_after_rebate = regular_tax
+    rebate_applied = 0
+    total_taxable_income = total_income + stcg + ltcg
+    if total_taxable_income <= 1200000:  # ₹12L limit
+        rebate_applied = min(60000, regular_tax)  # Max ₹60K rebate on regular tax only
+        regular_tax_after_rebate = max(0, regular_tax - rebate_applied)
+    else:
+        regular_tax_after_rebate = regular_tax
 
     # Step 7: Total tax = Regular tax (after rebate) + Capital gains tax (no rebate)
     total_tax_before_surcharge = regular_tax_after_rebate + cg_tax
@@ -1312,7 +1310,4 @@ st.markdown("""
     <p><small>🆕 Now includes Marginal Relief for New Regime (₹12L-₹12.6L income range)</small></p>
 </div>
 """, unsafe_allow_html=True)
-
-
-
 
