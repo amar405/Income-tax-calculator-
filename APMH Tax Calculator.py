@@ -82,7 +82,7 @@ else:
     # Cess
     cess = (total_tax_before_surcharge + surcharge) * 0.04
     
-        return round(max(total_tax_before_surcharge, 0), 2), round(surcharge, 2), round(cess, 2), round(rebate_applied, 2), 0
+    return round(max(total_tax_before_surcharge, 0), 2), round(surcharge, 2), round(cess, 2), round(rebate_applied, 2), 0
 
 def calculate_tax_new_regime(total_income, stcg, ltcg):
     # NEW REGIME TAX SLABS FOR FY 2024-25
