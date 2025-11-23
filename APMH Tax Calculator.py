@@ -1127,106 +1127,128 @@ with tab2:
         # Bar chart for tax breakdown
         st.markdown("### Tax Component Analysis")
 
-        # Calculate tax components if tax has been computed
-        try:
-            # For new regime
-            if regime == 'new':
-                stcg_tax_amt = stcg * 0.20
-                ltcg_tax_amt = max(0, ltcg - 125000) * 0.125
-                cg_tax_total = stcg_tax_amt + ltcg_tax_amt
-                regular_income_tax = max(0, basetax - cg_tax_total) if 'basetax' in dir() else 0
-            else:
-                stcg_tax_amt = stcg * 0.20
-                ltcg_tax_amt = max(0, ltcg - 125000) * 0.125
-                cg_tax_total = stcg_tax_amt + ltcg_tax_amt
-                regular_income_tax = max(0, basetax - cg_tax_total) if 'basetax' in dir() else 0
+        # Calculate tax components when Calculate button is clicked
+        if 'total_tax' in locals():
+            try:
+                # Calculate capital gains tax separately
+                stcg_tax_component = stcg * 0.20
+                ltcg_tax_component = max(0, ltcg - 125000) * 0.125
+                total_cg_tax = stcg_tax_component + ltcg_tax_component
 
-            # Create bar chart
-            tax_breakdown = {
-                "Tax Component": ["Tax on Regular Income", "Tax on Capital Gains"],
-                "Amount": [regular_income_tax, cg_tax_total]
-            }
+                # Calculate regular income tax (tax on other income excluding CG)
+                # Use basetax if available (tax before surcharge/cess)
+                if 'basetax' in locals():
+                    regular_tax_component = max(0, basetax - total_cg_tax)
+                else:
+                    # Fallback: estimate from total_tax
+                    regular_tax_component = max(0, (total_tax / 1.04) - total_cg_tax)
 
-            fig_bar = go.Figure(data=[
-                go.Bar(
-                    name='Tax Amount',
-                    x=tax_breakdown["Tax Component"],
-                    y=tax_breakdown["Amount"],
-                    marker_color=['#3498db', '#e74c3c'],
-                    text=[f'₹{val:,.0f}' for val in tax_breakdown["Amount"]],
-                    textposition='outside'
+                # Prepare data for bar chart - include BOTH components
+                tax_data = {
+                    "Tax Component": ["Tax on Other Income", "Tax on Capital Gains"],
+                    "Tax Amount": [regular_tax_component, total_cg_tax]
+                }
+
+                df_tax = pd.DataFrame(tax_data)
+
+                # Create bar chart showing BOTH bars
+                fig_bar = go.Figure(data=[
+                    go.Bar(
+                        x=df_tax["Tax Component"],
+                        y=df_tax["Tax Amount"],
+                        marker_color=['#3498db', '#e74c3c'],
+                        text=[f'₹{val:,.0f}' for val in df_tax["Tax Amount"]],
+                        textposition='outside',
+                        textfont=dict(size=12)
+                    )
+                ])
+
+                fig_bar.update_layout(
+                    title="Tax Breakdown: Other Income vs Capital Gains",
+                    yaxis_title="Tax Amount (₹)",
+                    xaxis_title="",
+                    height=400,
+                    showlegend=False
                 )
-            ])
 
-            fig_bar.update_layout(
-                title="Tax Breakdown by Income Type",
-                yaxis_title="Tax Amount (₹)",
-                height=400,
-                showlegend=False
-            )
+                st.plotly_chart(fig_bar, use_container_width=True)
 
-            st.plotly_chart(fig_bar, use_container_width=True)
-        except:
-            st.info("Calculate tax first to see the tax breakdown.")
+                # Show summary below chart
+                col_a, col_b = st.columns(2)
+                with col_a:
+                    st.metric("Tax on Other Income", f"₹{regular_tax_component:,.0f}")
+                with col_b:
+                    st.metric("Tax on Capital Gains", f"₹{total_cg_tax:,.0f}")
+
+            except Exception as e:
+                st.info("Calculate tax first to see the breakdown visualization.")
+        else:
+            st.info("Click 'Calculate Tax' button to see tax component breakdown.")
 
     # Effective tax rate
     st.markdown("### 📈 Effective Tax Rate")
-    try:
-        if total_taxable_income > 0:
-            effective_rate = (total_tax / total_taxable_income) * 100
-            st.success(f"🎯 Your effective tax rate is **{effective_rate:.2f}%**")
-    except:
-        st.info("Calculate tax first to see your effective tax rate.")
+    if 'total_tax' in locals() and 'total_taxable_income' in locals():
+        try:
+            if total_taxable_income > 0:
+                effective_rate = (total_tax / total_taxable_income) * 100
+                st.success(f"🎯 Your effective tax rate is **{effective_rate:.2f}%**")
+        except:
+            pass
 
-    # Show marginal relief benefit if applicable
-    try:
-        if marginal_relief_applied > 0:
-            st.info(f"⚡ **Marginal Relief Saved:** ₹{marginal_relief_applied:,.0f}")
-    except:
-        pass
+    # Show marginal relief if applicable
+    if 'marginal_relief_applied' in locals():
+        try:
+            if marginal_relief_applied > 0:
+                st.info(f"⚡ **Marginal Relief Saved:** ₹{marginal_relief_applied:,.0f}")
+        except:
+            pass
 with tab3:
     st.markdown("## 📅 Advance Tax Schedule")
-    st.info("Advance tax is payable if your tax liability exceeds ₹10,000 after TDS/TCS.")
+    st.info("Advance tax is payable if tax liability exceeds ₹10,000 after TDS/TCS")
 
-    try:
-        net_tax_liability = max(0, total_tax - tds_paid)
-        if net_tax_liability >= 10000:
-            st.markdown("### Quarterly Payment Schedule")
+    if 'total_tax' in locals() and 'tds_paid' in locals():
+        try:
+            net_liability = max(0, total_tax - tds_paid)
+            if net_liability >= 10000:
+                st.markdown("### Quarterly Installment Schedule")
 
-            q1 = round(net_tax_liability * 0.15)
-            q2 = round(net_tax_liability * 0.45) - q1
-            q3 = round(net_tax_liability * 0.75) - (q1 + q2)
-            q4 = round(net_tax_liability) - (q1 + q2 + q3)
+                q1_amt = round(net_liability * 0.15)
+                q2_amt = round(net_liability * 0.45) - q1_amt
+                q3_amt = round(net_liability * 0.75) - (q1_amt + q2_amt)
+                q4_amt = round(net_liability) - (q1_amt + q2_amt + q3_amt)
 
-            adv_tax_df = pd.DataFrame({
-                "Quarter": ["Q1 (Due: 15 June)", "Q2 (Due: 15 Sept)", "Q3 (Due: 15 Dec)", "Q4 (Due: 15 Mar)"],
-                "Cumulative %": ["15%", "45%", "75%", "100%"],
-                "Installment": [f"₹{q1:,.0f}", f"₹{q2:,.0f}", f"₹{q3:,.0f}", f"₹{q4:,.0f}"],
-                "Total Paid": [f"₹{q1:,.0f}", f"₹{q1+q2:,.0f}", f"₹{q1+q2+q3:,.0f}", f"₹{net_tax_liability:,.0f}"]
-            })
+                schedule_df = pd.DataFrame({
+                    "Quarter": ["Q1", "Q2", "Q3", "Q4"],
+                    "Due Date": ["15 June", "15 September", "15 December", "15 March"],
+                    "Cumulative %": ["15%", "45%", "75%", "100%"],
+                    "Installment Amount": [f"₹{q1_amt:,.0f}", f"₹{q2_amt:,.0f}", f"₹{q3_amt:,.0f}", f"₹{q4_amt:,.0f}"],
+                    "Total Tax Paid": [f"₹{q1_amt:,.0f}", f"₹{q1_amt+q2_amt:,.0f}", f"₹{q1_amt+q2_amt+q3_amt:,.0f}", f"₹{net_liability:,.0f}"]
+                })
 
-            st.table(adv_tax_df)
-            st.warning("⚠️ Interest u/s 234B/234C applies for delayed or short payment")
-        else:
-            st.success("✅ No advance tax required (liability below ₹10,000)")
-    except:
+                st.table(schedule_df)
+                st.warning("⚠️ Interest under sections 234B/234C applies for delay or short payment")
+            else:
+                st.success("✅ Advance tax not applicable (net liability below ₹10,000)")
+        except:
+            pass
+    else:
         st.info("Calculate tax first to see advance tax schedule")
 
 
 with tab4:
     st.markdown("""
-## Tax Regime Comparison
+## Tax Regime Comparison (AY 2026-27)
 
 | Feature | New Regime | Old Regime |
 |---------|------------|------------|
 | Standard Deduction | Rs 75000 | Rs 50000 |
-| Chapter VIA Deductions (80C 80D etc) | Not allowed | Allowed up to Rs 150000 |
-| House Rent Allowance (HRA) | Not allowed | Allowed |
+| 80C Deductions | Not allowed | Up to Rs 150000 |
+| House Rent Allowance | Not allowed | Allowed |
 | Professional Tax | Not allowed | Allowed |
-| Home Loan Interest (self-occupied) | Not allowed | Allowed |
-| NPS Employer Contribution (80CCD2) | Allowed | Allowed |
-| Section 87A Rebate | Up to Rs 12L income tax-free | Applicable |
-| Leave Travel Allowance | Not allowed | Allowed |
+| Home Loan Interest | Not allowed | Allowed |
+| NPS Employer Contribution | Allowed | Allowed |
+| Section 87A Rebate | Up to Rs 12L tax-free | Applicable |
+| LTA | Not allowed | Allowed |
 | Food Coupons | Not allowed | Allowed |
 """)
 
