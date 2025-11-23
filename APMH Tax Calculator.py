@@ -1147,7 +1147,7 @@ with tab4:
 
 | Feature                                   | New Regime       | Old Regime                 |
 |-------------------------------------------|------------------|----------------------------|
-| Standard Deduction                         | ₹75,000          | ₹50,000                    |
+| Standard Deduction                         | Rs.75,000          | Rs.50,000                    |
 | Chapter VIA Deductions (80C, 80D, etc.)   | Not allowed      | Allowed up to ₹1.5 lakh    |
 | House Rent Allowance (HRA)                 | Not allowed      | Allowed                    |
 | Professional Tax Deduction                 | Not allowed      | Allowed                    |
@@ -1328,6 +1328,7 @@ st.markdown("""
     <p><small>🆕 Now includes Marginal Relief for New Regime (₹12L-₹12.6L income range)</small></p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
