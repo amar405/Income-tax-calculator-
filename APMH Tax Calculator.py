@@ -787,7 +787,7 @@ with st.sidebar:
         """)
 
 # Main content area with tabs - UPDATED WITH 4TH TAB
-tab1, tab2, tab3, tab4 = st.tabs(["🧮 Calculate Tax", "📊 Analysis", "📋 Tax Planning", "📅 Advance Tax"])
+tab1, tab2, tab3, tab4 = st.tabs(["🧮 Calculate Tax", "📊 Analysis", "📅 Advance Tax", "📋 Tax Planning"])
 
 with tab1:
     # Input form with enhanced styling
@@ -1112,22 +1112,25 @@ with tab2:
             st.plotly_chart(fig_pie, use_container_width=True)
         
         with col2:
-            # Income vs Tax chart
-            income_components = ['Salary', 'Business', 'House Property', 'Other Sources', 'STCG', 'LTCG']
-            net_house_for_chart = max(0, (house_income * 0.7) - house_loan_interest) if 'house_loan_interest' in locals() else house_income * 0.7
-            income_values = [max(0, salary-75000 if regime=='new' else salary-50000), 
-                           business_income, net_house_for_chart, other_sources, stcg, ltcg]
-            
-            fig_bar = px.bar(
-                x=income_components,
-                y=income_values,
-                title="Income Source Breakdown",
-                color=income_values,
-                color_continuous_scale="viridis"
-            )
-            fig_bar.update_layout(height=400)
-            st.plotly_chart(fig_bar, use_container_width=True)
-        
+            import plotly.graph_objects as go
+
+# Example: Assuming you have variables:
+# regular_tax for tax on other income (excluding LTCG & STCG)
+# stcg_tax, ltcg_tax for capital gains tax components
+
+bar_data = {
+    "Tax Components": ["Tax on Other Income", "Tax on LTCG + STCG"],
+    "Amount": [regular_tax, stcg_tax + ltcg_tax]
+}
+
+fig = go.Figure(data=[
+    go.Bar(name='Tax', x=bar_data["Tax Components"], y=bar_data["Amount"], marker_color=['blue', 'orange'])
+])
+
+fig.update_layout(title="Tax Breakdown by Income Type", yaxis_title="Tax Amount (₹)")
+
+tab2.plotly_chart(fig, use_container_width=True)
+
         # Effective tax rate
         if total_taxable_income > 0:
             effective_rate = (total_tax / total_taxable_income) * 100
@@ -1137,9 +1140,24 @@ with tab2:
             if regime == 'new' and marginal_relief_applied > 0:
                 st.info(f"💡 **Marginal Relief Saved:** ₹{marginal_relief_applied:,.0f} - Without this relief, your tax would be higher!")
 
-with tab3:
+with tab4:
     st.markdown("### 📋 Tax Planning Suggestions")
-    
+
+## Tax Regime Comparison
+
+| Feature                                   | New Regime       | Old Regime                 |
+|-------------------------------------------|------------------|----------------------------|
+| Standard Deduction                         | ₹75,000          | ₹50,000                    |
+| Chapter VIA Deductions (80C, 80D, etc.)   | Not allowed      | Allowed up to ₹1.5 lakh    |
+| House Rent Allowance (HRA)                 | Not allowed      | Allowed                    |
+| Professional Tax Deduction                 | Not allowed      | Allowed                    |
+| Interest on Home Loan (self-occupied)     | Not allowed      | Allowed                    |
+| Employer's Contribution to NPS (80CCD2)   | Allowed          | Allowed                    |
+| Rebate under Section 87A                   | Up to ₹12L income is tax-free | Applicable       |
+| Leave Travel Allowance                     | Not allowed      | Allowed                    |
+| Food coupons and vouchers                  | Not allowed      | Allowed                    |
+""")
+  
     col1, col2 = st.columns(2)
     
     with col1:
@@ -1206,7 +1224,7 @@ with tab3:
     st.dataframe(tax_dates, use_container_width=True)
 
 # NEW TAB FOR ADVANCE TAX
-with tab4:
+with tab3:
     st.markdown("### 📅 Advance Tax Liability Schedule")
     
     if 'total_tax' in locals() and total_tax > 0:
@@ -1310,4 +1328,5 @@ st.markdown("""
     <p><small>🆕 Now includes Marginal Relief for New Regime (₹12L-₹12.6L income range)</small></p>
 </div>
 """, unsafe_allow_html=True)
+
 
