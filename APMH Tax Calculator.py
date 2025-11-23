@@ -787,7 +787,7 @@ with st.sidebar:
         """)
 
 # Main content area with tabs - UPDATED WITH 4TH TAB
-tab1, tab2, tab3, tab4 = st.tabs(["🧮 Calculate Tax", "📊 Analysis", "📅 Advance Tax", "📋 Tax Planning"])
+tab1, tab2, tab3, tab4 = st.tabs(["🧮 Calculate Tax", "📊 Analysis", "📋 Tax Planning", "📅 Advance Tax"])
 
 with tab1:
     # Input form with enhanced styling
@@ -1095,72 +1095,150 @@ with tab1:
         st.dataframe(df, use_container_width=True)
 
 with tab2:
-    st.markdown("### 📊 Tax Analysis & Visualizations")
-    
-    if 'total_tax' in locals():
-        # Pie chart for tax breakdown
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            fig_pie = go.Figure(data=[go.Pie(
-                labels=['Base Tax', 'Surcharge', 'Cess'],
-                values=[base_tax, surcharge, cess],
+    st.markdown("## 📊 Analysis & Visualizations")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        # Pie chart for income breakdown
+        st.markdown("### Income Component Breakdown")
+        income_data = {
+            "Income Source": ["Salary", "Business", "House Property", "Other Sources", "STCG", "LTCG"],
+            "Amount": [salary, business_income, house_income, other_sources, stcg, ltcg]
+        }
+        df_income = pd.DataFrame(income_data)
+        df_income = df_income[df_income["Amount"] > 0]
+
+        if not df_income.empty:
+            fig_pie = px.pie(
+                df_income,
+                values="Amount",
+                names="Income Source",
+                title="Income Distribution",
                 hole=0.4,
-                marker_colors=['#FF6B6B', '#4ECDC4', '#45B7D1']
-            )])
-            fig_pie.update_layout(title="Tax Component Breakdown", height=400)
+                color_discrete_sequence=['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F']
+            )
+            fig_pie.update_layout(title="Income Component Breakdown", height=400)
             st.plotly_chart(fig_pie, use_container_width=True)
-        
-        with col2:
-            if 'basetax' in locals() and basetax > 0:
-                # Calculate the individual tax components from the main calculation
-                # These should come from your tax calculation functions
-            
+        else:
+            st.info("Enter income details to see the breakdown.")
+
+    with col2:
+        # Bar chart for tax breakdown
+        st.markdown("### Tax Component Analysis")
+
+        # Calculate tax components if tax has been computed
+        if 'basetax' in locals() or 'total_tax' in locals():
+            try:
                 # For new regime
                 if regime == 'new':
-                    # Get regular tax (on other income) and CG tax separately
-                    regular_tax = basetax - (stcg * 0.20 + max(0, ltcg - 125000) * 0.125)
-                    cg_tax = stcg * 0.20 + max(0, ltcg - 125000) * 0.125
-            else:
-                # For old regime
-                    regular_tax = basetax - (stcg * 0.20 + max(0, ltcg - 125000) * 0.125)
-                    cg_tax = stcg * 0.20 + max(0, ltcg - 125000) * 0.125
-            
-            # Create bar chart
-            bar_data = {
-                "Tax Components": ["Tax on Other Income", "Tax on LTCG + STCG"],
-                "Amount": [max(0, regular_tax), max(0, cg_tax)]
-            }
-            
-            fig = go.Figure(data=[
-                go.Bar(name='Tax', x=bar_data["Tax Components"], y=bar_data["Amount"], 
-                       marker_color=['blue', 'orange'])
-            ])
-            
-            fig.update_layout(title="Tax Breakdown by Income Type", yaxis_title="Tax Amount (₹)")
-            st.plotly_chart(fig, use_container_width=True)
+                    # Calculate STCG and LTCG tax
+                    stcg_tax_amt = stcg * 0.20
+                    ltcg_tax_amt = max(0, ltcg - 125000) * 0.125
+                    cg_tax_total = stcg_tax_amt + ltcg_tax_amt
 
-        # Effective tax rate
+                    # Regular income tax (total tax minus CG tax)
+                    if 'basetax' in locals():
+                        regular_income_tax = max(0, basetax - cg_tax_total)
+                    elif 'total_tax' in locals():
+                        regular_income_tax = max(0, total_tax - surcharge - cess - cg_tax_total)
+                    else:
+                        regular_income_tax = 0
+                else:
+                    # For old regime
+                    stcg_tax_amt = stcg * 0.20
+                    ltcg_tax_amt = max(0, ltcg - 125000) * 0.125
+                    cg_tax_total = stcg_tax_amt + ltcg_tax_amt
+
+                    if 'basetax' in locals():
+                        regular_income_tax = max(0, basetax - cg_tax_total)
+                    elif 'total_tax' in locals():
+                        regular_income_tax = max(0, total_tax - surcharge - cess - cg_tax_total)
+                    else:
+                        regular_income_tax = 0
+
+                # Create bar chart data
+                tax_breakdown = {
+                    "Tax Component": ["Tax on Regular Income", "Tax on Capital Gains"],
+                    "Amount": [regular_income_tax, cg_tax_total]
+                }
+
+                fig_bar = go.Figure(data=[
+                    go.Bar(
+                        name='Tax Amount',
+                        x=tax_breakdown["Tax Component"],
+                        y=tax_breakdown["Amount"],
+                        marker_color=['#3498db', '#e74c3c'],
+                        text=[f'₹{val:,.0f}' for val in tax_breakdown["Amount"]],
+                        textposition='outside'
+                    )
+                ])
+
+                fig_bar.update_layout(
+                    title="Tax Breakdown by Income Type",
+                    yaxis_title="Tax Amount (₹)",
+                    height=400,
+                    showlegend=False
+                )
+
+                st.plotly_chart(fig_bar, use_container_width=True)
+            except:
+                st.info("Calculate tax first to see the tax breakdown.")
+        else:
+            st.info("Calculate tax first to see the tax breakdown analysis.")
+
+    # Effective tax rate
+    st.markdown("### 📈 Effective Tax Rate")
+    if 'total_tax' in locals() and 'total_taxable_income' in locals():
+        if total_taxable_income > 0:
             effective_rate = (total_tax / total_taxable_income) * 100
             st.success(f"🎯 Your effective tax rate is **{effective_rate:.2f}%**")
-            
-            # Show marginal relief benefit if applicable
-            if regime == 'new' and marginal_relief_applied > 0:
-                st.info(f"💡 **Marginal Relief Saved:** ₹{marginal_relief_applied:,.0f} - Without this relief, your tax would be higher!")
+        else:
+            st.info("No taxable income to calculate effective rate.")
+    else:
+        st.info("Calculate tax first to see your effective tax rate.")
+
+    # Show marginal relief benefit if applicable
+    if 'marginal_relief_applied' in locals() and marginal_relief_applied > 0:
+        st.info(f"⚡ **Marginal Relief Saved:** ₹{marginal_relief_applied:,.0f} - Without this relief, your tax would have been higher!")
+with tab3:
+    st.markdown("## 📅 Advance Tax Schedule")
+    st.info("Advance tax payment details will be calculated here based on your total tax liability.")
+
+    # Advance tax schedule
+    if 'total_tax' in locals() and 'tds_paid' in locals():
+        net_tax_liability = max(0, total_tax - tds_paid)
+        if net_tax_liability >= 10000:
+            st.markdown("### Quarterly Payment Schedule")
+
+            q1 = round(net_tax_liability * 0.15)
+            q2 = round(net_tax_liability * 0.45) - q1
+            q3 = round(net_tax_liability * 0.75) - (q1 + q2)
+            q4 = round(net_tax_liability) - (q1 + q2 + q3)
+
+            adv_tax_df = pd.DataFrame({
+                "Quarter": ["Q1 (Due: 15th June)", "Q2 (Due: 15th Sept)", "Q3 (Due: 15th Dec)", "Q4 (Due: 15th Mar)"],
+                "Percentage": ["15%", "45%", "75%", "100%"],
+                "Installment Amount": [f"₹{q1:,.0f}", f"₹{q2:,.0f}", f"₹{q3:,.0f}", f"₹{q4:,.0f}"],
+                "Cumulative Payable": [f"₹{q1:,.0f}", f"₹{q1+q2:,.0f}", f"₹{q1+q2+q3:,.0f}", f"₹{q1+q2+q3+q4:,.0f}"]
+            })
+
+            st.table(adv_tax_df)
+            st.warning("⚠️ Interest u/s 234B/234C applicable if advance tax is delayed or short-paid.")
+        else:
+            st.success("✅ Your net tax liability is below ₹10,000. Advance tax payment is not mandatory.")
+    else:
+        st.info("Calculate tax first to see the advance tax schedule.")
+
 
 with tab4:
-    st.markdown("### 📋 Tax Planning Suggestions")
-
-with tab4:
-    st.markdown("## Tax Planning Suggestions")
-    
     st.markdown("""
 ## Tax Regime Comparison
 
 | Feature | New Regime | Old Regime |
 |---------|------------|------------|
 | Standard Deduction | Rs 75000 | Rs 50000 |
-| Chapter VIA Deductions (80C, 80D, etc.) | Not allowed | Allowed up to Rs 150000 |
+| Chapter VIA Deductions (80C 80D etc) | Not allowed | Allowed up to Rs 150000 |
 | House Rent Allowance (HRA) | Not allowed | Allowed |
 | Professional Tax Deduction | Not allowed | Allowed |
 | Interest on Home Loan (self-occupied) | Not allowed | Allowed |
@@ -1169,6 +1247,8 @@ with tab4:
 | Leave Travel Allowance | Not allowed | Allowed |
 | Food coupons and vouchers | Not allowed | Allowed |
 """)
+
+    st.markdown("### 📋 Tax Planning Suggestions")
     
     col1, col2 = st.columns(2)
     
@@ -1236,7 +1316,23 @@ with tab4:
     st.dataframe(tax_dates, use_container_width=True)
 
 # NEW TAB FOR ADVANCE TAX
-with tab3:
+with tab4:
+    st.markdown("""
+## Tax Regime Comparison
+
+| Feature | New Regime | Old Regime |
+|---------|------------|------------|
+| Standard Deduction | Rs 75000 | Rs 50000 |
+| Chapter VIA Deductions (80C 80D etc) | Not allowed | Allowed up to Rs 150000 |
+| House Rent Allowance (HRA) | Not allowed | Allowed |
+| Professional Tax Deduction | Not allowed | Allowed |
+| Interest on Home Loan (self-occupied) | Not allowed | Allowed |
+| Employer Contribution to NPS (80CCD2) | Allowed | Allowed |
+| Rebate under Section 87A | Up to Rs 12 lakh income is tax-free | Applicable |
+| Leave Travel Allowance | Not allowed | Allowed |
+| Food coupons and vouchers | Not allowed | Allowed |
+""")
+
     st.markdown("### 📅 Advance Tax Liability Schedule")
     
     if 'total_tax' in locals() and total_tax > 0:
@@ -1340,20 +1436,4 @@ st.markdown("""
     <p><small>🆕 Now includes Marginal Relief for New Regime (₹12L-₹12.6L income range)</small></p>
 </div>
 """, unsafe_allow_html=True)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
