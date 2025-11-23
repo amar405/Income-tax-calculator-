@@ -1143,21 +1143,25 @@ if total_taxable_income > 0:
 with tab4:
     st.markdown("### 📋 Tax Planning Suggestions")
 
+with tab4:
+    st.markdown("## Tax Planning Suggestions")
+    
+    st.markdown("""
 ## Tax Regime Comparison
 
-| Feature                                   | New Regime       | Old Regime                 |
-|-------------------------------------------|------------------|----------------------------|
-| Standard Deduction                         | Rs.75,000          | Rs.50,000                    |
-| Chapter VIA Deductions (80C, 80D, etc.)   | Not allowed      | Allowed up to Rs. 1.5 lakh    |
-| House Rent Allowance (HRA)                 | Not allowed      | Allowed                    |
-| Professional Tax Deduction                 | Not allowed      | Allowed                    |
-| Interest on Home Loan (self-occupied)     | Not allowed      | Allowed                    |
-| Employer's Contribution to NPS (80CCD2)   | Allowed          | Allowed                    |
-| Rebate under Section 87A                   | Up to Rs.12L income is tax-free | Applicable       |
-| Leave Travel Allowance                     | Not allowed      | Allowed                    |
-| Food coupons and vouchers                  | Not allowed      | Allowed                    |
+| Feature | New Regime | Old Regime |
+|---------|------------|------------|
+| Standard Deduction | Rs 75000 | Rs 50000 |
+| Chapter VIA Deductions (80C, 80D, etc.) | Not allowed | Allowed up to Rs 150000 |
+| House Rent Allowance (HRA) | Not allowed | Allowed |
+| Professional Tax Deduction | Not allowed | Allowed |
+| Interest on Home Loan (self-occupied) | Not allowed | Allowed |
+| Employer Contribution to NPS (80CCD2) | Allowed | Allowed |
+| Rebate under Section 87A | Up to Rs 12 lakh income is tax-free | Applicable |
+| Leave Travel Allowance | Not allowed | Allowed |
+| Food coupons and vouchers | Not allowed | Allowed |
 """)
-  
+    
     col1, col2 = st.columns(2)
     
     with col1:
@@ -1328,6 +1332,7 @@ st.markdown("""
     <p><small>🆕 Now includes Marginal Relief for New Regime (₹12L-₹12.6L income range)</small></p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
