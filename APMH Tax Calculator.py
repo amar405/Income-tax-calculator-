@@ -787,7 +787,7 @@ with st.sidebar:
         """)
 
 # Main content area with tabs - UPDATED WITH 4TH TAB
-tab1, tab2, tab3, tab4 = st.tabs(["🧮 Calculate Tax", "📊 Analysis", "📋 Tax Planning", "📅 Advance Tax"])
+tab1, tab2, tab3, tab4 = st.tabs(["🧮 Calculate Tax", "📊 Analysis", "📅 Advance Tax", "📋 Tax Planning"])
 
 with tab1:
     # Input form with enhanced styling
@@ -1424,4 +1424,5 @@ st.markdown("""
     <p><small>🆕 Now includes Marginal Relief for New Regime (₹12L-₹12.6L income range)</small></p>
 </div>
 """, unsafe_allow_html=True)
+
 
