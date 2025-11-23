@@ -1132,7 +1132,7 @@ fig.update_layout(title="Tax Breakdown by Income Type", yaxis_title="Tax Amount 
 tab2.plotly_chart(fig, use_container_width=True)
 
         # Effective tax rate
-        if total_taxable_income > 0:
+if total_taxable_income > 0:
             effective_rate = (total_tax / total_taxable_income) * 100
             st.success(f"🎯 Your effective tax rate is **{effective_rate:.2f}%**")
             
@@ -1328,5 +1328,6 @@ st.markdown("""
     <p><small>🆕 Now includes Marginal Relief for New Regime (₹12L-₹12.6L income range)</small></p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
