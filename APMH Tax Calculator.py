@@ -1112,8 +1112,6 @@ with tab2:
             st.plotly_chart(fig_pie, use_container_width=True)
         
         with col2:
-            with tab2:
-    st.markdown("## Tax Analysis Visualizations")
     
     if 'basetax' in locals() and basetax > 0:
         # Calculate the individual tax components from the main calculation
@@ -1346,6 +1344,7 @@ st.markdown("""
     <p><small>🆕 Now includes Marginal Relief for New Regime (₹12L-₹12.6L income range)</small></p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
