@@ -1113,11 +1113,11 @@ with tab2:
         
         with col2:
             if 'basetax' in locals() and basetax > 0:
-        # Calculate the individual tax components from the main calculation
-        # These should come from your tax calculation functions
+            # Calculate the individual tax components from the main calculation
+            # These should come from your tax calculation functions
         
-        # For new regime
-        if regime == 'new':
+            # For new regime
+            if regime == 'new':
             # Get regular tax (on other income) and CG tax separately
             regular_tax = basetax - (stcg * 0.20 + max(0, ltcg - 125000) * 0.125)
             cg_tax = stcg * 0.20 + max(0, ltcg - 125000) * 0.125
@@ -1343,6 +1343,7 @@ st.markdown("""
     <p><small>🆕 Now includes Marginal Relief for New Regime (₹12L-₹12.6L income range)</small></p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
