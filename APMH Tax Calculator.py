@@ -1118,13 +1118,13 @@ with tab2:
             
                 # For new regime
                 if regime == 'new':
-                # Get regular tax (on other income) and CG tax separately
-                regular_tax = basetax - (stcg * 0.20 + max(0, ltcg - 125000) * 0.125)
-                cg_tax = stcg * 0.20 + max(0, ltcg - 125000) * 0.125
+                    # Get regular tax (on other income) and CG tax separately
+                    regular_tax = basetax - (stcg * 0.20 + max(0, ltcg - 125000) * 0.125)
+                    cg_tax = stcg * 0.20 + max(0, ltcg - 125000) * 0.125
             else:
                 # For old regime
-                regular_tax = basetax - (stcg * 0.20 + max(0, ltcg - 125000) * 0.125)
-                cg_tax = stcg * 0.20 + max(0, ltcg - 125000) * 0.125
+                    regular_tax = basetax - (stcg * 0.20 + max(0, ltcg - 125000) * 0.125)
+                    cg_tax = stcg * 0.20 + max(0, ltcg - 125000) * 0.125
             
             # Create bar chart
             bar_data = {
@@ -1343,6 +1343,7 @@ st.markdown("""
     <p><small>🆕 Now includes Marginal Relief for New Regime (₹12L-₹12.6L income range)</small></p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
