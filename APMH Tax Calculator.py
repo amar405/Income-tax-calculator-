@@ -1113,34 +1113,34 @@ with tab2:
         
         with col2:
             if 'basetax' in locals() and basetax > 0:
-            # Calculate the individual tax components from the main calculation
-            # These should come from your tax calculation functions
-        
-            # For new regime
-            if regime == 'new':
-            # Get regular tax (on other income) and CG tax separately
-            regular_tax = basetax - (stcg * 0.20 + max(0, ltcg - 125000) * 0.125)
-            cg_tax = stcg * 0.20 + max(0, ltcg - 125000) * 0.125
+                # Calculate the individual tax components from the main calculation
+                # These should come from your tax calculation functions
+            
+                # For new regime
+                if regime == 'new':
+                # Get regular tax (on other income) and CG tax separately
+                regular_tax = basetax - (stcg * 0.20 + max(0, ltcg - 125000) * 0.125)
+                cg_tax = stcg * 0.20 + max(0, ltcg - 125000) * 0.125
+            else:
+                # For old regime
+                regular_tax = basetax - (stcg * 0.20 + max(0, ltcg - 125000) * 0.125)
+                cg_tax = stcg * 0.20 + max(0, ltcg - 125000) * 0.125
+            
+            # Create bar chart
+            bar_data = {
+                "Tax Components": ["Tax on Other Income", "Tax on LTCG + STCG"],
+                "Amount": [max(0, regular_tax), max(0, cg_tax)]
+            }
+            
+            fig = go.Figure(data=[
+                go.Bar(name='Tax', x=bar_data["Tax Components"], y=bar_data["Amount"], 
+                       marker_color=['blue', 'orange'])
+            ])
+            
+            fig.update_layout(title="Tax Breakdown by Income Type", yaxis_title="Tax Amount (₹)")
+            st.plotly_chart(fig, use_container_width=True)
         else:
-            # For old regime
-            regular_tax = basetax - (stcg * 0.20 + max(0, ltcg - 125000) * 0.125)
-            cg_tax = stcg * 0.20 + max(0, ltcg - 125000) * 0.125
-        
-        # Create bar chart
-        bar_data = {
-            "Tax Components": ["Tax on Other Income", "Tax on LTCG + STCG"],
-            "Amount": [max(0, regular_tax), max(0, cg_tax)]
-        }
-        
-        fig = go.Figure(data=[
-            go.Bar(name='Tax', x=bar_data["Tax Components"], y=bar_data["Amount"], 
-                   marker_color=['blue', 'orange'])
-        ])
-        
-        fig.update_layout(title="Tax Breakdown by Income Type", yaxis_title="Tax Amount (₹)")
-        st.plotly_chart(fig, use_container_width=True)
-    else:
-        st.info("Calculate tax first to see the analysis visualization.")
+            st.info("Calculate tax first to see the analysis visualization.")
 
         # Effective tax rate
 if total_taxable_income > 0:
@@ -1343,6 +1343,7 @@ st.markdown("""
     <p><small>🆕 Now includes Marginal Relief for New Regime (₹12L-₹12.6L income range)</small></p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
