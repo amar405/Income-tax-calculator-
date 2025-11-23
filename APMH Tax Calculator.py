@@ -1139,8 +1139,8 @@ with tab2:
             
             fig.update_layout(title="Tax Breakdown by Income Type", yaxis_title="Tax Amount (₹)")
             st.plotly_chart(fig, use_container_width=True)
-                else:
-                    st.info("Calculate tax first to see the analysis visualization.")
+            else:
+                st.info("Calculate tax first to see the analysis visualization.")
 
         # Effective tax rate
 if total_taxable_income > 0:
@@ -1343,6 +1343,7 @@ st.markdown("""
     <p><small>🆕 Now includes Marginal Relief for New Regime (₹12L-₹12.6L income range)</small></p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
